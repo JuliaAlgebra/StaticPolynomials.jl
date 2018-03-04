@@ -40,3 +40,12 @@ end
     @test exponents(f2) == [0 2 1 0; 0 0 1 2]
     @test coefficients(f2) == [1, 2, 3, 4]
 end
+
+@testset "evaluation" begin
+    @polyvar x y
+    f2 = Polynomial(2x^2+4y^2+3x*y+1)
+    g = SP.Polynomial(f2)
+    w = rand(2)
+
+    @test abs(SP.evaluate(g, w) - f2(x => w[1], y => w[2])) < 1e-15
+end
