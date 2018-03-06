@@ -52,6 +52,7 @@ end
     g2 = Polynomial(f2)
     @test SP.system(g1, g2) isa SP.AbstractSystem{Int64, 2, 2}
     @test SP.system(g1, g2, g2) isa SP.AbstractSystem{Int64, 3, 2}
+    @test SP.system([f1, f2, y, x]) isa SP.AbstractSystem{Int64, 4, 2}
 end
 
 @testset "evaluation" begin

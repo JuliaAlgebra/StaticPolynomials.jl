@@ -2,6 +2,27 @@ export AbstractSystem, system, evaluate, evaluate!
 
 abstract type AbstractSystem{T, Size, NVars} end
 
+"""
+    system(polys::AbstractVector{<:MP.AbstractPolynomial}...)
+    system(polys...)
+
+Create a system of polynomials from the given `polys`.
+The result is an object which is a subtype of [`AbstractSystem`](@ref).
+This function is by design not typestable.
+
+## Example
+```julia
+julia> import DynamicPolynomials: @polyvar
+julia> @polyvar x y
+julia> F = system(x^2+y^2+3, x-y+2, x^2+2y)
+julia> F isa AbstractSystem{Int64, 3, 2}
+true
+```
+"""
+function system(polys::AbstractVector{<:MP.AbstractPolynomial})
+    variables = sort!(union(Iterators.flatten(MP.variables.(polys))), rev=true)
+    system(map(p -> Polynomial(p, variables), polys)...)
+end
 @inline system(polys...) = Systems.system(polys...)
 
 """
@@ -28,7 +49,7 @@ end
 module Systems
 
     using ..StaticPolynomials
-    import ..StaticPolynomials: evaluate, evaluate!
+    import ..StaticPolynomials: evaluate, evaluate!, system
     import StaticArrays: SVector
 
     function create_system_impl(n)

@@ -2,11 +2,9 @@ export Polynomial, coefficients, exponents, nvars
 
 
 """
-    Polynomial([T, ] f::MP.AbstractPolynomial, [variables])
+    Polynomial(f::MP.AbstractPolynomial, [variables])
 
 Construct a Polynomial from f.
-
-    Polynomial(f::FixedPolynomials.Polynomial)
 """
 struct Polynomial{T, NVars, E<:SExponents}
     coefficients::Vector{T}
