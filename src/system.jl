@@ -1,4 +1,4 @@
-export AbstractSystem, system, evaluate, evaluate!
+export AbstractSystem, system, evaluate, evaluate!, nvariables, npolynomials, coefficienttype
 
 abstract type AbstractSystem{T, Size, NVars} end
 
@@ -44,6 +44,28 @@ end
 @inline function evaluate(S::AbstractSystem{T1, M}, x::AbstractVector{T2}) where {T1, M, T2}
     Systems.evaluate!(Vector{promote_type(T1, T2)}(M), S, x)
 end
+
+"""
+    nvariables(F::AbstractSystem)
+
+The number of variables of the system `F`.
+"""
+nvariables(F::AbstractSystem{T, M, NVars}) where {T, M, NVars} = NVars
+
+"""
+    npolynomials(F::AbstractSystem)
+
+The number of polynomials of the system `F`.
+"""
+npolynomials(F::AbstractSystem{T, M, NVars}) where {T, M, NVars} = M
+Base.length(F::AbstractSystem) = npolynomials(F)
+
+"""
+    coefficienttype(F::AbstractSystem)
+
+Return the type of the coefficients of the polynomials of `F`.
+"""
+coefficienttype(::AbstractSystem{T}) where {T} = T
 
 # We create a nested module to not clutter the namespace
 module Systems

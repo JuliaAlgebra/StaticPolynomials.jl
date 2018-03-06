@@ -1,4 +1,4 @@
-export Polynomial, coefficients, exponents, nvars
+export Polynomial, coefficients, exponents, nvariables, coefficienttype
 
 
 """
@@ -60,11 +60,18 @@ function exponents(::Polynomial{T, NVars, E}) where {T, NVars, E<:SExponents}
 end
 
 """
-    nvars(f::Polynomial)
+    nvariables(f::Polynomial)
 
 Return the number of variables `f`.
 """
-nvars(::Polynomial{T, NVars}) where {T, NVars} = NVars
+nvariables(::Polynomial{T, NVars}) where {T, NVars} = NVars
+
+"""
+    coefficienttype(f::Polynomial)
+
+Return the type of the coefficients of `f`.
+"""
+coefficienttype(::Polynomial{T, NVars}) where {T, NVars} = T
 
 
 function Base.:(==)(f::Polynomial{T, NVars, E}, g::Polynomial{T, NVars, E}) where {T, NVars, E<:SExponents}
