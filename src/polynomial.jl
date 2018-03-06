@@ -1,5 +1,4 @@
-export Polynomial, coefficients, exponents
-
+export Polynomial, coefficients, exponents, nvars
 
 
 """
@@ -9,23 +8,24 @@ Construct a Polynomial from f.
 
     Polynomial(f::FixedPolynomials.Polynomial)
 """
-struct Polynomial{T, E<:SExponents}
+struct Polynomial{T, NVars, E<:SExponents}
     coefficients::Vector{T}
 
-    function Polynomial{T, E}(coefficients::Vector{T}) where {T, E<:SExponents}
-        @assert length(coefficients) == nterms(E) "Coefficients size does not match exponents size"
+    function Polynomial{T, NVars, SExponents{E}}(coefficients::Vector{T}) where {T, NVars, E}
+        @assert length(coefficients) == div(length(E), NVars) "Coefficients size does not match exponents size"
         new(coefficients)
     end
 end
 
-function Polynomial(coefficients::Vector{T}, exponents::E) where {T, E<:SExponents}
-    return Polynomial{T, E}(coefficients)
+function Polynomial(coefficients::Vector{T}, nvars, exponents::E) where {T, E<:SExponents}
+    return Polynomial{T, nvars, E}(coefficients)
 end
 
 function Polynomial(coefficients::Vector{T}, exponents::Matrix{<:Integer}) where {T}
+    nvars = size(exponents, 1)
     @assert length(coefficients) == size(exponents, 2) "Coefficients size does not match exponents size"
     E, p = revlexicographic(exponents)
-    return Polynomial(coefficients[p], SExponents(E))
+    return Polynomial(coefficients[p], nvars, SExponents(E))
 end
 
 function Polynomial(p::MP.AbstractPolynomialLike{T}, vars = MP.variables(p)) where T
@@ -57,10 +57,18 @@ coefficients(f::Polynomial) = f.coefficients
 Return the exponents of `f` as an matrix where each column represents
 the exponents of a monomial.
 """
-function exponents(::Polynomial{T, E}) where {T, E<:SExponents}
-    exponents(E)
+function exponents(::Polynomial{T, NVars, E}) where {T, NVars, E<:SExponents}
+    exponents(E, NVars)
 end
 
-function Base.:(==)(f::Polynomial{T, E}, g::Polynomial{T, E}) where {T, E<:SExponents}
+"""
+    nvars(f::Polynomial)
+
+Return the number of variables `f`.
+"""
+nvars(::Polynomial{T, NVars}) where {T, NVars} = NVars
+
+
+function Base.:(==)(f::Polynomial{T, NVars, E}, g::Polynomial{T, NVars, E}) where {T, NVars, E<:SExponents}
     coefficients(f) == coefficients(g)
 end

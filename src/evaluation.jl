@@ -1,5 +1,7 @@
-function evaluate_impl(f::Type{Polynomial{T, E}}) where {T, E<:SExponents}
-    generate_evaluate(exponents(E), T)
+export evaluate
+
+function evaluate_impl(f::Type{Polynomial{T, NVars, E}}) where {T, NVars, E<:SExponents}
+    generate_evaluate(exponents(E, NVars), T)
 end
 
 @generated function evaluate(f::Polynomial, x::AbstractVector)
