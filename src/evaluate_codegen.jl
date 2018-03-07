@@ -14,7 +14,7 @@ function generate_evaluate(E, ::Type{T}, nvar, nterm) where T
 
     if m == 1
         coeffs = [:(c[$j]) for j=nterm:nterm+n]
-        return evalpoly(T, E[1,:], coeffs, nvar)
+        return evalpoly(T, E[1,:], coeffs, x_(nvar))
     end
 
     # Recursive
@@ -32,7 +32,7 @@ function generate_evaluate(E, ::Type{T}, nvar, nterm) where T
         sub_nterm += size(submatrix, 2)
     end
 
-    return Expr(:block, coeffs_subexpr..., evalpoly(T, degrees, coeffs, nvar))
+    return Expr(:block, coeffs_subexpr..., evalpoly(T, degrees, coeffs, x_(nvar)))
 end
 
 function create_submatrices_degrees(E)
@@ -56,31 +56,6 @@ function create_submatrices_degrees(E)
     submatrices, degrees
 end
 
-function evalpoly(::Type{T}, exps::AbstractVector, cs::AbstractVector, nvar) where T
-    ops = []
-    d = exps[end]
-    k = 0
-    i = 1
-    while k ≤ d
-        if i ≤ length(exps) && exps[i] == k
-            push!(ops, cs[i])
-            i += 1
-        else
-            push!(ops, :(zero($T)))
-        end
-        k += 1
-    end
-
-    return _evalpoly(T, ops, nvar)
-end
-
-function _evalpoly(::Type{T}, coeffs, nvar) where T
-    if length(coeffs) == 1
-        return coeffs[1]
-    end
-    # Be smarter since we know the zeros...
-    :(@evalpoly($(x_(nvar)), $(coeffs...)))
-end
 
 function monomial_product(exps::AbstractVector, nterm)
     ops = Expr[]

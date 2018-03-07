@@ -10,8 +10,9 @@ module StaticPolynomials
     include("helpers.jl")
     include("sexponents.jl")
     include("polynomial.jl")
-
     include("show.jl")
+
+    include("codegen_helpers.jl")
     include("evaluate_codegen.jl")
     include("evaluation.jl")
 

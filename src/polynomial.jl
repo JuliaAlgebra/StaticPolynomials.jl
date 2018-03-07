@@ -22,8 +22,23 @@ end
 function Polynomial(coefficients::Vector{T}, exponents::Matrix{<:Integer}) where {T}
     nvars = size(exponents, 1)
     @assert length(coefficients) == size(exponents, 2) "Coefficients size does not match exponents size"
-    E, p = revlexicographic(exponents)
+    E, p = revlexicographic_cols(exponents)
     return Polynomial(coefficients[p], nvars, SExponents(E))
+end
+
+# Implementation from Base.sort adapted to also reorder an associated vector
+"""
+    revlexicographic_cols(A, v)
+
+Sorts the columns of `A` in reverse lexicographic order and returns the permutation vector
+to obtain this ordering.
+"""
+function revlexicographic_cols(A::AbstractMatrix; kws...)
+    inds = indices(A,2)
+    T = Base.Sort.slicetypeof(A, :, inds)
+    cols = map(i -> (@view A[end:-1:1, i]), inds)
+    p = sortperm(cols; kws..., order=Base.Sort.Lexicographic)
+    A[:,p], p
 end
 
 function Polynomial(p::MP.AbstractPolynomialLike{T}, vars = MP.variables(p)) where T
