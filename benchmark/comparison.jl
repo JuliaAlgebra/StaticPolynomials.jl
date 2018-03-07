@@ -24,3 +24,7 @@ url = get(posted_gist.html_url)
 
 println("Result available at:")
 println(url)
+
+if is_unix()
+    run(`open $url`)
+end
