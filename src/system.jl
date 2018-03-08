@@ -45,6 +45,26 @@ end
     Systems.evaluate!(Vector{promote_type(T1, T2)}(M), S, x)
 end
 
+
+"""
+    jacobian!(u, F::AbstractSystem, x)
+
+Evaluate the Jacobian of the system `F` at `x` and store the result in `u`.
+"""
+@inline jacobian!(u, S::AbstractSystem, x) = Systems.jacobian!(u, S, x)
+
+"""
+    jacobian(F::AbstractSystem, x)
+    jacobian(F::AbstractSystem, x::SVector)
+
+Evaluate the Jacobian of the system `F` at `x`.
+"""
+@inline function jacobian(S::AbstractSystem{T1, M, N}, x::SVector{N, T2}) where {T1, T2, M, N}
+    Systems.jacobian(S, x)
+end
+@inline function jacobian(S::AbstractSystem{T1, M, N}, x::AbstractVector{T2}) where {T1, M, N, T2}
+    Systems.jacobian!(Vector{promote_type(T1, T2)}(M, N), S, x)
+end
 """
     nvariables(F::AbstractSystem)
 
@@ -71,8 +91,26 @@ coefficienttype(::AbstractSystem{T}) where {T} = T
 module Systems
 
     using ..StaticPolynomials
-    import ..StaticPolynomials: evaluate, evaluate!, system
-    import StaticArrays: SVector
+    import ..StaticPolynomials: evaluate, evaluate!, system, evaluate_gradient
+    import StaticArrays: SVector, SMatrix
+
+
+    function assemble_matrix_impl(::Type{SVector{M, SVector{N, T}}}) where {T, N, M}
+        :(SMatrix{$M, $N, $T, $(M*N)}(
+            $([:(vectors[$i][$j]) for j=1:N for i=1:M]...)
+        ))
+    end
+    @inline @generated assemble_matrix(vectors::SVector{N, <:SVector}) where N = assemble_matrix_impl(vectors)
+
+    function jacobian_impl(::Type{<:AbstractSystem{T, M, N}}) where {T, M, N}
+        quote
+            $((:($(Symbol("∇", i)) = evaluate_gradient(system.$(Symbol("f", i)), x)) for i in 1:M)...)
+            SMatrix{$M, $N, eltype(∇1), $(M*N)}(
+                $([:($(Symbol("∇", i))[$j]) for j=1:N for i=1:M]...)
+            )
+        end
+    end
+
 
     function create_system_impl(n)
         fs = [Symbol("f", i) for i=1:n]
@@ -101,6 +139,25 @@ module Systems
                         $((Symbol("u_", i) for i=1:n)...)
                     ))
                 ))
+            end
+
+
+            function jacobian!(u::AbstractMatrix, S::$(name), x::AbstractVector)
+                $(Expr(:block, [:(u[$i, :] .= evaluate_gradient(S.$(fs[i]), x)) for i in 1:n]...))
+                u
+            end
+            #
+            # function jacobian(system::$(name){T, N}, x::SVector{N, S}) where {T, S, N}
+            #     $(Expr(:block,
+            #         (:($(Symbol("∇", i)) = evaluate_gradient(system.$(fs[i]), x)) for i in 1:n)...,
+            #         :(assemble_matrix(SVector(
+            #             $((Symbol("∇", i) for i=1:n)...)
+            #         )))
+            #     ))
+            # end
+
+            @generated function jacobian(system::$(name){T, N}, x::SVector{N, S}) where {T, S, N}
+                jacobian_impl(system)
             end
         end
     end

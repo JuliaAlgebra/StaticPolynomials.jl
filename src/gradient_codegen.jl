@@ -7,11 +7,9 @@ This assumes that E is in reverse lexicographic order.
 function generate_gradient(E, ::Type{T}) where T
     exprs = []
     values = generate_gradient!(exprs, E, T, size(E, 1), 1, true)
-    for k=2:length(values)
-        push!(exprs, :($(u_(k-1)) = $(values[k])))
-    end
+    out = :(SVector($(values[2:end]...)))
 
-    Expr(:block, exprs..., Expr(:tuple, (u_(k) for k=1:size(E, 1))...))
+    Expr(:block, exprs..., out)
 end
 
 function generate_gradient!(exprs, E, ::Type{T}, nvar, nterm, final=false) where T
@@ -79,7 +77,9 @@ function monomial_product_derivative(::Type{T}, exps::AbstractVector, coefficien
     ops = []
     push!(ops, coefficient)
     for (k, e) in enumerate(exps)
-        if k == i && e > 1
+        if k == i && e == 1
+            continue
+        elseif k == i && e > 1
             unshift!(ops, :($e))
             push!(ops, :($(x_(k))^$(e - 1)))
         else
