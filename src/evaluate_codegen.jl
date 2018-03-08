@@ -6,8 +6,8 @@ This assumes that E is in reverse lexicographic order.
 """
 function generate_evaluate(E, ::Type{T}) where T
     exprs = []
-    generate_evaluate!(exprs, E, T, size(E, 1), 1)
-    Expr(:block, exprs...)
+    last_expr = generate_evaluate!(exprs, E, T, size(E, 1), 1)
+    Expr(:block, exprs..., last_expr)
 end
 
 function generate_evaluate!(exprs, E, ::Type{T}, nvar, nterm) where T
@@ -25,12 +25,10 @@ function generate_evaluate!(exprs, E, ::Type{T}, nvar, nterm) where T
     # Recursive
     coeffs = []
     sub_nterm = nterm
-    degrees = Int[]
-    for (d, E_d) in degree_submatrices(E)
-        push!(degrees, d)
+    degrees, submatrices = degrees_submatrices(E)
+    for E_d in submatrices
         coeff_subexpr = generate_evaluate!(exprs, E_d, T, nvar - 1, sub_nterm)
-        c = gensym("c")
-        # c = c_(nvar - 1, d)
+        @gensym c
         push!(exprs, :($c = $coeff_subexpr))
         push!(coeffs, c)
         sub_nterm += size(E_d, 2)

@@ -1,15 +1,15 @@
 """
-    submatrices(exponents_matrix)
+    degrees_submatrices(exponents_matrix)
 
 Returns the submatrices with the corresponding degree. This takes the degrees
 from the bottom and assume a reverse lexicographic order of the columns.
 
 ## Example
 ```julia
-julia> create_submatrices_degrees([1 2 2; 1 3 2; 1 1 2]) |> collect
-[(1, [1 2: 1 3], (2, [1 ; 1])]
+julia> degrees_submatrices([1 2 2; 1 3 2; 1 1 2])
+([1, 2], [[1 2; 1 3], [1 ; 1]])
 """
-function degree_submatrices(E)
+function degrees_submatrices(E)
     submatrices = Vector{typeof(@view E[1:end-1, 1:1])}()# Vector{Matrix{Int}}()
     degrees = Int[]
     j = 1
@@ -27,7 +27,7 @@ function degree_submatrices(E)
     end
     push!(submatrices, @view E[1:end-1, last_d_change:end])
     push!(degrees, E[end, end])
-    zip(degrees, submatrices)
+    degrees, submatrices
 end
 
 

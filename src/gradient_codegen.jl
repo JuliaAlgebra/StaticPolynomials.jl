@@ -6,37 +6,61 @@ This assumes that E is in reverse lexicographic order.
 """
 function generate_gradient(E, ::Type{T}) where T
     exprs = []
-    generate_gradient!(exprs, E, T, size(E, 1), 1)
-    Expr(:block, exprs...)
+    values = generate_gradient!(exprs, E, T, size(E, 1), 1, true)
+    for k=2:length(values)
+        push!(exprs, :($(u_(k-1)) = $(values[k])))
+    end
+
+    Expr(:block, exprs..., Expr(:tuple, (u_(k) for k=1:size(E, 1))...))
 end
 
-function generate_gradient!(exprs, E, ::Type{T}, nvar, nterm) where T
+function generate_gradient!(exprs, E, ::Type{T}, nvar, nterm, final=false) where T
     m, n = size(E)
 
     if n == 1
-        return monomial_product_val_derivatives(T, E[:,1], nterm)
+        val, dvals = monomial_product_val_derivatives(T, E[:,1], :(c[$nterm]))
+
+        @gensym c
+        push!(exprs, :($c = $val))
+
+        cs = [c]
+        for dval in dvals
+            @gensym c
+            push!(cs, c)
+            push!(exprs, :($c = $dval))
+        end
+
+        return cs
     end
 
     if m == 1
         coeffs = [:(c[$j]) for j=nterm:nterm+n]
-        return evalpoly(T, E[1,:], coeffs, x_(nvar))
+        val, dval = eval_derivative_poly!(exprs, T, E[1,:], coeffs, x_(nvar))
+        return [val, dval]
     end
 
     # Recursive
-    coeffs = []
-    sub_nterm = nterm
-    degrees = Int[]
-    for (d, E_d) in degree_submatrices(E)
-        push!(degrees, d)
-        coeff_subexpr = generate_gradient!(exprs, E_d, T, nvar - 1, sub_nterm)
-        c = gensym("c")
-        # c = c_(nvar - 1, d)
-        push!(exprs, :($c = $coeff_subexpr))
-        push!(coeffs, c)
-        sub_nterm += size(E_d, 2)
+    degrees, submatrices = degrees_submatrices(E)
+    # For each coefficient we have the actual coefficent plus each partial derivative
+    # of the other variables
+    coeffs = Matrix{Symbol}(length(submatrices), m)
+    for (k, E_d) in enumerate(submatrices)
+        coeffs[k, :] = generate_gradient!(exprs, E_d, T, nvar - 1, nterm)
+        nterm += size(E_d, 2)
     end
 
-    return evalpoly(T, degrees, coeffs, x_(nvar))
+    # Now we have to evaluate polynomials
+    # for our current variable we need our new partial derivative
+    val, dval = eval_derivative_poly!(exprs, T, degrees, coeffs[:, 1], x_(nvar))
+    values = [val]
+    for k=2:m
+        @gensym c
+        push!(exprs, :($c = $(evalpoly(T, degrees, coeffs[:, k], x_(nvar)))))
+        push!(values, c)
+    end
+    push!(values, dval)
+
+    return values
 end
 
 function monomial_product_val_derivatives(::Type{T}, exps::AbstractVector, coefficient) where T
@@ -55,11 +79,11 @@ function monomial_product_derivative(::Type{T}, exps::AbstractVector, coefficien
     ops = []
     push!(ops, coefficient)
     for (k, e) in enumerate(exps)
-        if k != i
-            push!(ops, :($(x_(k))^$e))
-        elseif e > 1
+        if k == i && e > 1
             unshift!(ops, :($e))
             push!(ops, :($(x_(k))^$(e - 1)))
+        else
+            push!(ops, :($(x_(k))^$e))
         end
     end
     batch_arithmetic_ops(:*, ops)
