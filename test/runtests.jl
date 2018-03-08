@@ -19,13 +19,13 @@ using StaticArrays
     E = [ 4  4  1  3  5
           2  4  2  2  5
           0  1  2  2  2 ]
-    submatrices, degrees = SP.create_submatrices_degrees(E)
-    @test length(submatrices) == 3
-    @test degrees == [0, 1, 2]
+    dsub = SP.degree_submatrices(E) |> collect
+    @test length(dsub) == 3
+    @test first.(dsub) == [0, 1, 2]
 
-    submatrices2, degrees2 = SP.create_submatrices_degrees(submatrices[3])
-    @test submatrices2 == [[1 3], reshape([5], 1, 1)]
-    @test degrees2 == [2, 5]
+    dsub2 = SP.degree_submatrices(last.(dsub)[3]) |> collect
+    @test last.(dsub2) == [[1 3], reshape([5], 1, 1)]
+    @test first.(dsub2) == [2, 5]
 end
 
 @testset "constructors" begin
