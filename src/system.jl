@@ -96,20 +96,22 @@ module Systems
 
 
     function assemble_matrix_impl(::Type{SVector{M, SVector{N, T}}}) where {T, N, M}
-        :(SMatrix{$M, $N, $T, $(M*N)}(
-            $([:(vectors[$i][$j]) for j=1:N for i=1:M]...)
-        ))
-    end
-    @inline @generated assemble_matrix(vectors::SVector{N, <:SVector}) where N = assemble_matrix_impl(vectors)
-
-    function jacobian_impl(::Type{<:AbstractSystem{T, M, N}}) where {T, M, N}
         quote
-            $((:($(Symbol("∇", i)) = evaluate_gradient(system.$(Symbol("f", i)), x)) for i in 1:M)...)
-            SMatrix{$M, $N, eltype(∇1), $(M*N)}(
-                $([:($(Symbol("∇", i))[$j]) for j=1:N for i=1:M]...)
+            SMatrix{$M, $N, $T, $(M*N)}(
+                tuple($([:(vectors[$i][$j]) for j=1:N for i=1:M]...))
             )
         end
     end
+    @inline @generated assemble_matrix(vectors::SVector{N, <:SVector}) where N = assemble_matrix_impl(vectors)
+
+    # function jacobian_impl(::Type{<:AbstractSystem{T, M, N}}) where {T, M, N}
+    #     quote
+    #         $((:($(Symbol("∇", i)) = evaluate_gradient(system.$(Symbol("f", i)), x)) for i in 1:M)...)
+    #         SMatrix{$M, $N, eltype(∇1), $(M*N)}(
+    #             $([:($(Symbol("∇", i))[$j]) for j=1:N for i=1:M]...)
+    #         )
+    #     end
+    # end
 
 
     function create_system_impl(n)
@@ -146,19 +148,19 @@ module Systems
                 $(Expr(:block, [:(u[$i, :] .= evaluate_gradient(S.$(fs[i]), x)) for i in 1:n]...))
                 u
             end
-            #
-            # function jacobian(system::$(name){T, N}, x::SVector{N, S}) where {T, S, N}
-            #     $(Expr(:block,
-            #         (:($(Symbol("∇", i)) = evaluate_gradient(system.$(fs[i]), x)) for i in 1:n)...,
-            #         :(assemble_matrix(SVector(
-            #             $((Symbol("∇", i) for i=1:n)...)
-            #         )))
-            #     ))
-            # end
 
-            @generated function jacobian(system::$(name){T, N}, x::SVector{N, S}) where {T, S, N}
-                jacobian_impl(system)
+            function jacobian(system::$(name){T, N}, x::SVector{N, S}) where {T, S, N}
+                $(Expr(:block,
+                    (:($(Symbol("∇", i)) = evaluate_gradient(system.$(fs[i]), x)) for i in 1:n)...,
+                    :(assemble_matrix(SVector(
+                        $((Symbol("∇", i) for i=1:n)...)
+                    )))
+                ))
             end
+            #
+            # @generated function jacobian(system::$(name){T, N}, x::SVector{N, S}) where {T, S, N}
+            #     jacobian_impl(system)
+            # end
         end
     end
 

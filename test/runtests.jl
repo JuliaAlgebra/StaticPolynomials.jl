@@ -103,3 +103,5 @@ end
     @test evaluate(G, w) isa SVector{2}
     @test [evaluate(g1, w), evaluate(g2, w)] == evaluate(G, w)
 end
+
+include("evaluation_tests.jl")
