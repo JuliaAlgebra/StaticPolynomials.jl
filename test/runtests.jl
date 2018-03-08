@@ -28,6 +28,22 @@ using StaticArrays
     @test first.(dsub2) == [2, 5]
 end
 
+T = Float64
+degrees = [0, 2, 3]
+coefficients = [:(2), :(-2), :(5)]
+var = :x
+
+x = rand()
+xval = 2.0 - 2 * x^2 + 5 * x^3
+xdval = -4 * x + 15 * x^2
+val, dval = eval(SP.eval_derivative_poly(T, degrees, coefficients, var))
+val ≈ xval
+dval ≈ xdval
+
+monomial_product_derivatives(T, [2, 3, 4], :c5)
+
+
+
 @testset "constructors" begin
     A = round.(Int, max.(0.0, 5 * rand(6, 10) - 1))
     f = Polynomial(rand(10), A)

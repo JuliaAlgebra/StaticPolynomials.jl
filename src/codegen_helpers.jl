@@ -52,6 +52,32 @@ function evalpoly(::Type{T}, degrees::AbstractVector, coefficients::AbstractVect
     :(@evalpoly($var, $(normalized_coeffs...)))
 end
 
+
+"""
+    eval_derivative_poly(::Type{T}, degrees, coefficients, var::Union{Symbol, Expr})
+
+Evaluate the polynomial and its derivative defined by the degrees and coefficients.
+"""
+function eval_derivative_poly(::Type{T}, degrees::AbstractVector, coefficients::AbstractVector, var) where T
+    normalized_coeffs = normalized_coefficients(T, degrees, coefficients)
+
+    exprs = [:(dval = zero($T)), :(val=zero($T))]
+
+    # TODO: Make this way smater
+    deg = length(normalized_coeffs)
+    for k = deg:-1:1
+        if k < deg
+            push!(exprs, :(dval = muladd(dval, $var, val)))
+        end
+        push!(exprs, :(val = muladd(val, $var, $(normalized_coeffs[k]))))
+    end
+
+    Expr(:block, exprs..., :((val, dval)))
+end
+
+
+
+
 """
     normalized_poly_coefficents(::Type{T}, degrees, coefficients)
 
