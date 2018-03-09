@@ -8,24 +8,26 @@ using StaticArrays
     @test SP.monomial_product([2, 3, 4], 5) == :(c[5] * x[1]^2 * x[2]^3 * x[3]^4)
     @test SP.monomial_product([2, 3, 4], 1) == :(c[1] * x[1]^2 * x[2]^3 * x[3]^4)
     @test SP.monomial_product([2, 3], 12) == :(c[12] * x[1]^2 * x[2]^3)
-    @test SP.generate_evaluate([2 3 4]', Float64) == :(c[1] * x[1]^2 * x[2]^3 * x[3]^4)
+    @test SP.generate_evaluate([2 3 4]', Float64) == quote c[1] * x[1]^2 * x[2]^3 * x[3]^4 end
 
     @test SP.generate_evaluate(reshape([1 2 3], 1, 3), Float64) ==
-        :(@evalpoly x[1] zero($Float64) c[1] c[2] c[3])
+        quote @evalpoly x[1] zero($Float64) c[1] c[2] c[3] end
 
     @test SP.generate_evaluate(reshape([2 5], 1, 2), Float64) ==
-        :(@evalpoly x[1] zero($Float64) zero($Float64) c[1] zero($Float64) zero($Float64) c[2])
+        quote
+            @evalpoly x[1] zero($Float64) zero($Float64) c[1] zero($Float64) zero($Float64) c[2]
+        end
 
     E = [ 4  4  1  3  5
           2  4  2  2  5
           0  1  2  2  2 ]
-    dsub = SP.degree_submatrices(E) |> collect
-    @test length(dsub) == 3
-    @test first.(dsub) == [0, 1, 2]
+    degrees, subs = SP.degrees_submatrices(E)
+    @test length(degrees) == 3
+    @test degrees == [0, 1, 2]
 
-    dsub2 = SP.degree_submatrices(last.(dsub)[3]) |> collect
-    @test last.(dsub2) == [[1 3], reshape([5], 1, 1)]
-    @test first.(dsub2) == [2, 5]
+    degrees2, subs2 = SP.degrees_submatrices(subs[3])
+    @test subs2 == [[1 3], reshape([5], 1, 1)]
+    @test degrees2 == [2, 5]
 end
 
 @testset "constructors" begin
@@ -82,3 +84,6 @@ end
     @test evaluate(G, w) isa SVector{2}
     @test [evaluate(g1, w), evaluate(g2, w)] == evaluate(G, w)
 end
+
+include("evaluation_tests.jl")
+include("gradient_tests.jl")
