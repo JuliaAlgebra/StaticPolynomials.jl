@@ -4,32 +4,8 @@ using Base.Test
 import DynamicPolynomials: @polyvar
 using StaticArrays
 
-@testset "evaluate_codegen low_level" begin
-    @test SP.monomial_product([2, 3, 4], 5) == :(c[5] * x[1]^2 * x[2]^3 * x[3]^4)
-    @test SP.monomial_product([2, 3, 4], 1) == :(c[1] * x[1]^2 * x[2]^3 * x[3]^4)
-    @test SP.monomial_product([2, 3], 12) == :(c[12] * x[1]^2 * x[2]^3)
-    @test SP.generate_evaluate([2 3 4]', Float64) == quote c[1] * x[1]^2 * x[2]^3 * x[3]^4 end
 
-    @test SP.generate_evaluate(reshape([1 2 3], 1, 3), Float64) ==
-        quote @evalpoly x[1] zero($Float64) c[1] c[2] c[3] end
-
-    @test SP.generate_evaluate(reshape([2 5], 1, 2), Float64) ==
-        quote
-            @evalpoly x[1] zero($Float64) zero($Float64) c[1] zero($Float64) zero($Float64) c[2]
-        end
-
-    E = [ 4  4  1  3  5
-          2  4  2  2  5
-          0  1  2  2  2 ]
-    degrees, subs = SP.degrees_submatrices(E)
-    @test length(degrees) == 3
-    @test degrees == [0, 1, 2]
-
-    degrees2, subs2 = SP.degrees_submatrices(subs[3])
-    @test subs2 == [[1 3], reshape([5], 1, 1)]
-    @test degrees2 == [2, 5]
-end
-
+include("codegen_tests.jl")
 @testset "constructors" begin
     A = round.(Int, max.(0.0, 5 * rand(6, 10) - 1))
     f = Polynomial(rand(10), A)
