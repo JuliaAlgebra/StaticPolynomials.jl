@@ -8,46 +8,27 @@ using StaticArrays
     @test SP.monomial_product([2, 3, 4], 5) == :(c[5] * x[1]^2 * x[2]^3 * x[3]^4)
     @test SP.monomial_product([2, 3, 4], 1) == :(c[1] * x[1]^2 * x[2]^3 * x[3]^4)
     @test SP.monomial_product([2, 3], 12) == :(c[12] * x[1]^2 * x[2]^3)
-    @test SP.generate_evaluate([2 3 4]', Float64) == :(c[1] * x[1]^2 * x[2]^3 * x[3]^4)
+    @test SP.generate_evaluate([2 3 4]', Float64) == quote c[1] * x[1]^2 * x[2]^3 * x[3]^4 end
 
     @test SP.generate_evaluate(reshape([1 2 3], 1, 3), Float64) ==
-        :(@evalpoly x[1] zero($Float64) c[1] c[2] c[3])
+        quote @evalpoly x[1] zero($Float64) c[1] c[2] c[3] end
 
     @test SP.generate_evaluate(reshape([2 5], 1, 2), Float64) ==
-        :(@evalpoly x[1] zero($Float64) zero($Float64) c[1] zero($Float64) zero($Float64) c[2])
+        quote
+            @evalpoly x[1] zero($Float64) zero($Float64) c[1] zero($Float64) zero($Float64) c[2]
+        end
 
     E = [ 4  4  1  3  5
           2  4  2  2  5
           0  1  2  2  2 ]
-    dsub = SP.degree_submatrices(E) |> collect
-    @test length(dsub) == 3
-    @test first.(dsub) == [0, 1, 2]
+    degrees, subs = SP.degrees_submatrices(E)
+    @test length(degrees) == 3
+    @test degrees == [0, 1, 2]
 
-    dsub2 = SP.degree_submatrices(last.(dsub)[3]) |> collect
-    @test last.(dsub2) == [[1 3], reshape([5], 1, 1)]
-    @test first.(dsub2) == [2, 5]
+    degrees2, subs2 = SP.degrees_submatrices(subs[3])
+    @test subs2 == [[1 3], reshape([5], 1, 1)]
+    @test degrees2 == [2, 5]
 end
-
-T = Float64
-degrees = [0, 2, 3]
-coefficients = [:(2), :(-2), :(5)]
-var = :x
-
-x = rand()
-xval = 2.0 - 2 * x^2 + 5 * x^3
-xdval = -4 * x + 15 * x^2
-val, dval = eval(SP.eval_derivative_poly(T, degrees, coefficients, var))
-val ≈ xval
-dval ≈ xdval
-
-SP.monomial_product_derivatives(T, [2, 3, 4], :c5)
-
-E = [ 4  4  1  3  5
-      2  4  2  2  5
-      0  1  2  2  2 ]
-
-SP.generate_evaluate(E, Float64)
-
 
 @testset "constructors" begin
     A = round.(Int, max.(0.0, 5 * rand(6, 10) - 1))
@@ -105,3 +86,4 @@ end
 end
 
 include("evaluation_tests.jl")
+include("gradient_tests.jl")
