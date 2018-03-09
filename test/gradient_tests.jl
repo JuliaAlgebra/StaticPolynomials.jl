@@ -9,7 +9,7 @@
       xdval = -4 * x + 15 * x^2
       exprs = []
       sval, sdval = SP.eval_derivative_poly!(exprs, T, degrees, coefficients, var)
-      val, dval = eval(Expr(:block, exprs..., :(($sval, $sdval))))
+      val, dval = eval(Expr(:block, :(x = $x), exprs..., :(($sval, $sdval))))
       @test val ≈ xval
       @test dval ≈ xdval
 end
