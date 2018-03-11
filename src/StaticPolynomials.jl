@@ -6,6 +6,7 @@ module StaticPolynomials
     const MP = MultivariatePolynomials
 
     import StaticArrays: SVector
+    using MacroTools: @q
 
     include("helpers.jl")
     include("sexponents.jl")

@@ -78,8 +78,6 @@ function eval_derivative_poly!(exprs, ::Type{T}, degrees::AbstractVector, coeffi
 end
 
 
-
-
 """
     normalized_poly_coefficents(::Type{T}, degrees, coefficients)
 
