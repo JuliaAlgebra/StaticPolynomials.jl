@@ -62,17 +62,7 @@ function eval_derivative_poly!(exprs, ::Type{T}, degrees::AbstractVector, coeffi
     normalized_coeffs = normalized_coefficients(T, degrees, coefficients)
 
     @gensym dval val
-
-    push!(exprs, :($dval = zero($T)), :($val=zero($T)))
-
-    # TODO: Make this way smater
-    deg = length(normalized_coeffs)
-    for k = deg:-1:1
-        if k < deg
-            push!(exprs, :($dval = muladd($dval, $var, $val)))
-        end
-        push!(exprs, :($val = muladd($val, $var, $(normalized_coeffs[k]))))
-    end
+    push!(exprs, :(($val, $dval) = @evalpoly_deriv($var, $(normalized_coeffs...))))
 
     return val, dval
 end
