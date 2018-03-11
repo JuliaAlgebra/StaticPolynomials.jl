@@ -14,7 +14,7 @@ function generate_evaluate!(exprs, E, ::Type{T}, nvar, nterm) where T
     m, n = size(E)
 
     if n == 1
-        return monomial_product(E[:,1], nterm)
+        return monomial_product(T, E[:,1], :(c[$nterm]))
     end
 
     if m == 1
@@ -35,14 +35,4 @@ function generate_evaluate!(exprs, E, ::Type{T}, nvar, nterm) where T
     end
 
     return evalpoly(T, degrees, coeffs, x_(nvar))
-end
-
-
-function monomial_product(exps::AbstractVector, nterm)
-    ops = Expr[]
-    push!(ops, :(c[$nterm]))
-    for (i, e) in enumerate(exps)
-        push!(ops, :($(x_(i))^$e))
-    end
-    batch_arithmetic_ops(:*, ops)
 end

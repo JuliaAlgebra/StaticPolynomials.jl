@@ -1,4 +1,4 @@
-export AbstractSystem, system, evaluate, evaluate!, nvariables, npolynomials, coefficienttype
+export AbstractSystem, system, evaluate, evaluate!, jacobian, jacobian!, variables, npolynomials, coefficienttype
 
 abstract type AbstractSystem{T, Size, NVars} end
 
@@ -63,7 +63,7 @@ Evaluate the Jacobian of the system `F` at `x`.
     Systems.jacobian(S, x)
 end
 @inline function jacobian(S::AbstractSystem{T1, M, N}, x::AbstractVector{T2}) where {T1, M, N, T2}
-    Systems.jacobian!(Vector{promote_type(T1, T2)}(M, N), S, x)
+    Systems.jacobian!(Matrix{promote_type(T1, T2)}(M, N), S, x)
 end
 """
     nvariables(F::AbstractSystem)
@@ -103,16 +103,6 @@ module Systems
         end
     end
     @inline @generated assemble_matrix(vectors::SVector{N, <:SVector}) where N = assemble_matrix_impl(vectors)
-
-    # function jacobian_impl(::Type{<:AbstractSystem{T, M, N}}) where {T, M, N}
-    #     quote
-    #         $((:($(Symbol("∇", i)) = evaluate_gradient(system.$(Symbol("f", i)), x)) for i in 1:M)...)
-    #         SMatrix{$M, $N, eltype(∇1), $(M*N)}(
-    #             $([:($(Symbol("∇", i))[$j]) for j=1:N for i=1:M]...)
-    #         )
-    #     end
-    # end
-
 
     function create_system_impl(n)
         fs = [Symbol("f", i) for i=1:n]
@@ -157,10 +147,6 @@ module Systems
                     )))
                 ))
             end
-            #
-            # @generated function jacobian(system::$(name){T, N}, x::SVector{N, S}) where {T, S, N}
-            #     jacobian_impl(system)
-            # end
         end
     end
 

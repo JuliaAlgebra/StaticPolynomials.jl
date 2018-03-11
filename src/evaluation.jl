@@ -1,4 +1,4 @@
-export evaluate
+export evaluate, gradient, gradient!
 
 function evaluate_impl(f::Type{Polynomial{T, NVars, E}}) where {T, NVars, E<:SExponents}
     generate_evaluate(exponents(E, NVars), T)
@@ -10,7 +10,6 @@ end
         $(evaluate_impl(f))
     end
 end
-
 
 function gradient_impl(f::Type{Polynomial{T, NVars, E}}) where {T, NVars, E<:SExponents}
     generate_gradient(exponents(E, NVars), T)

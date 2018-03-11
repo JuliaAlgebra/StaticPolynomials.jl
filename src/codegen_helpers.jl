@@ -62,22 +62,10 @@ function eval_derivative_poly!(exprs, ::Type{T}, degrees::AbstractVector, coeffi
     normalized_coeffs = normalized_coefficients(T, degrees, coefficients)
 
     @gensym dval val
-
-    push!(exprs, :($dval = zero($T)), :($val=zero($T)))
-
-    # TODO: Make this way smater
-    deg = length(normalized_coeffs)
-    for k = deg:-1:1
-        if k < deg
-            push!(exprs, :($dval = muladd($dval, $var, $val)))
-        end
-        push!(exprs, :($val = muladd($val, $var, $(normalized_coeffs[k]))))
-    end
+    push!(exprs, :(($val, $dval) = @evalpoly_deriv($var, $(normalized_coeffs...))))
 
     return val, dval
 end
-
-
 
 
 """
@@ -107,4 +95,48 @@ function normalized_coefficients(::Type{T}, degrees::AbstractVector, coefficient
         k += 1
     end
     ops
+end
+
+
+
+"""
+    monomial_product(::Type{T}, exponent, coefficient, i::Union{Void, Int}=nothing)
+
+Generate the monomial product defined by `exponent` with `ooefficient.`
+If `i` is an `Int` the partial derivative will be generated.
+"""
+function monomial_product(::Type{T}, exponent::AbstractVector, coefficient, i::Union{Void, Int}=nothing) where T
+    if i !== nothing && exponent[i] == 0
+        return :(zero($T))
+    end
+    ops = []
+    push!(ops, coefficient)
+    for (k, e) in enumerate(exponent)
+        if k == i && e == 1
+            continue
+        elseif k == i && e > 1
+            unshift!(ops, :($e))
+            if e > 2
+                push!(ops, :($(x_(k))^$(e - 1)))
+            else
+                # e = 1
+                push!(ops, :($(x_(k))))
+            end
+        elseif e == 1
+            push!(ops, :($(x_(k))))
+        elseif e > 1
+            push!(ops, :($(x_(k))^$e))
+        end
+    end
+    batch_arithmetic_ops(:*, ops)
+end
+
+
+function monomial_product_with_derivatives(::Type{T}, exponent::AbstractVector, coefficient) where T
+    val = monomial_product(T, exponent, coefficient)
+    dvals = map(1:length(exponent)) do i
+        monomial_product(T, exponent, coefficient, i)
+    end
+
+    val, dvals
 end

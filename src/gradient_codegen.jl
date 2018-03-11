@@ -16,7 +16,7 @@ function generate_gradient!(exprs, E, ::Type{T}, nvar, nterm, final=false) where
     m, n = size(E)
 
     if n == 1
-        val, dvals = monomial_product_val_derivatives(T, E[:,1], :(c[$nterm]))
+        val, dvals = monomial_product_with_derivatives(T, E[:,1], :(c[$nterm]))
 
         @gensym c
         push!(exprs, :($c = $val))
