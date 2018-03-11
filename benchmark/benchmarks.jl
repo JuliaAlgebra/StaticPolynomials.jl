@@ -8,14 +8,14 @@ function bevaluate(T, testsystem)
     F = SP.system(TestSystems.equations(testsystem))
     n = SP.nvariables(F)
     x = SVector{n, T}(rand(T, n))
-    @benchmarkable SP.evaluate($F, $x) evals=10
+    @benchmarkable SP.evaluate($F, $x)
 end
 
 function bjacobian(T, testsystem)
     F = SP.system(TestSystems.equations(testsystem))
     n = SP.nvariables(F)
     x = SVector{n, T}(rand(T, n))
-    @benchmarkable SP.jacobian($F, $x) evals=10
+    @benchmarkable SP.jacobian($F, $x)
 end
 
 
