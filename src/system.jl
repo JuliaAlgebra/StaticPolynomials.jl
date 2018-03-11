@@ -1,4 +1,4 @@
-export AbstractSystem, system, evaluate, evaluate!, nvariables, npolynomials, coefficienttype
+export AbstractSystem, system, evaluate, evaluate!, jacobian, jacobian!, variables, npolynomials, coefficienttype
 
 abstract type AbstractSystem{T, Size, NVars} end
 
@@ -63,7 +63,7 @@ Evaluate the Jacobian of the system `F` at `x`.
     Systems.jacobian(S, x)
 end
 @inline function jacobian(S::AbstractSystem{T1, M, N}, x::AbstractVector{T2}) where {T1, M, N, T2}
-    Systems.jacobian!(Vector{promote_type(T1, T2)}(M, N), S, x)
+    Systems.jacobian!(Matrix{promote_type(T1, T2)}(M, N), S, x)
 end
 """
     nvariables(F::AbstractSystem)
