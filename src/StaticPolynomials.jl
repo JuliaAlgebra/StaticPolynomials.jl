@@ -8,6 +8,8 @@ module StaticPolynomials
     import StaticArrays: SVector
     using MacroTools: @q
 
+    import Base: gradient
+
     include("helpers.jl")
     include("sexponents.jl")
     include("polynomial.jl")
