@@ -4,10 +4,14 @@ function evaluate_impl(f::Type{Polynomial{T, NVars, E}}) where {T, NVars, E<:SEx
     generate_evaluate(exponents(E, NVars), T)
 end
 
-@generated function evaluate(f::Polynomial, x::AbstractVector)
+@generated function evaluate(f::Polynomial{T, NVars, E}, x::AbstractVector) where {T, NVars, E}
     quote
+        @boundscheck length(x) ≥ NVars
         c = coefficients(f)
-        $(evaluate_impl(f))
+        @inbounds out = begin
+            $(evaluate_impl(f))
+        end
+        out
     end
 end
 
@@ -29,9 +33,13 @@ function gradient!(u::AbstractVector, f::Polynomial, x::AbstractVector)
     u
 end
 
-@generated function evaluate_gradient(f::Polynomial, x::AbstractVector)
+@generated function evaluate_gradient(f::Polynomial{T, NVars, E}, x::AbstractVector) where {T, NVars, E}
     quote
+        @boundscheck length(x) ≥ NVars
         c = coefficients(f)
-        $(gradient_impl(f))
+        @inbounds out = begin
+            $(gradient_impl(f))
+        end
+        out
     end
 end
