@@ -37,36 +37,6 @@ function batch_arithmetic_ops(op::Symbol, ops)
     end
 end
 
-"""
-    evalpoly(::Type{T}, degrees, coefficients, var::Union{Symbol, Expr})
-
-Evaluate the polynomial defined by the degrees and coefficients.
-"""
-function evalpoly(::Type{T}, degrees::AbstractVector, coefficients::AbstractVector, var) where T
-    normalized_coeffs = normalized_coefficients(T, degrees, coefficients)
-
-    if length(normalized_coeffs) == 1
-        return normalized_coeffs[1]
-    end
-    # TODO: Be smarter since we know the zeros...
-    :(@evalpoly($var, $(normalized_coeffs...)))
-end
-
-
-"""
-    eval_derivative_poly(::Type{T}, degrees, coefficients, var::Union{Symbol, Expr})
-
-Evaluate the polynomial and its derivative defined by the degrees and coefficients.
-"""
-function eval_derivative_poly!(exprs, ::Type{T}, degrees::AbstractVector, coefficients::AbstractVector, var) where T
-    normalized_coeffs = normalized_coefficients(T, degrees, coefficients)
-
-    @gensym dval val
-    push!(exprs, :(($val, $dval) = @evalpoly_deriv($var, $(normalized_coeffs...))))
-
-    return val, dval
-end
-
 
 """
     normalized_poly_coefficents(::Type{T}, degrees, coefficients)
@@ -96,7 +66,6 @@ function normalized_coefficients(::Type{T}, degrees::AbstractVector, coefficient
     end
     ops
 end
-
 
 
 """
@@ -139,4 +108,25 @@ function monomial_product_with_derivatives(::Type{T}, exponent::AbstractVector, 
     end
 
     val, dvals
+end
+
+
+function pow(expr::Union{Expr,Symbol}, k::Integer)
+    if k == 2
+        :($expr * $expr)
+    elseif k == 3
+        :(($expr * $expr * $expr))
+    elseif k == 4
+        symb = gensym(:p)
+        quote
+            $symb = $expr * $expr
+            $symb * $symb
+        end
+    elseif k == 1
+        :($expr)
+    elseif k == 0
+        :(one($expr))
+    else
+        :(pow($expr, $k))
+    end
 end

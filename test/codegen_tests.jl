@@ -45,31 +45,31 @@ end
 
         true_val = c0 + c1 * z + c2 * z^2 + c3 * z^3 + c4 * z^4 + c5 * z^5
         true_dval = c1 + 2c2 * z + 3c3 * z^2 + 4c4 * z^3 + 5c5 * z^4
-        val, dval = @goertzel_deriv z c0 c1 c2 c3 c4 c5
+        val, dval = SP.@goertzel_deriv z c0 c1 c2 c3 c4 c5
         @test abs(val - true_val) < 1e-14
         @test abs(dval - true_dval) < 1e-14
-        val, dval = @horner_deriv z c0 c1 c2 c3 c4 c5
+        val, dval = SP.@horner_deriv z c0 c1 c2 c3 c4 c5
         @test abs(val - true_val) < 1e-14
         @test abs(dval - true_dval) < 1e-14
-        val, dval = @evalpoly_deriv z c0 c1 c2 c3 c4 c5
+        val, dval = SP.@evalpoly_derivative z c0 c1 c2 c3 c4 c5
         @test abs(val - true_val) < 1e-14
         @test abs(dval - true_dval) < 1e-14
 
         true_val = c0 + c1 * z + c2 * z^2
         true_dval = c1 + 2c2 * z
-        val, dval = @goertzel_deriv z c0 c1 c2
+        val, dval = SP.@goertzel_deriv z c0 c1 c2
         @test abs(val - true_val) < 1e-14
         @test abs(dval - true_dval) < 1e-14
-        val, dval = @horner_deriv z c0 c1 c2
+        val, dval = SP.@horner_deriv z c0 c1 c2
         @test abs(val - true_val) < 1e-14
         @test abs(dval - true_dval) < 1e-14
 
         true_val = c0 + c1 * z
         true_dval = c1
-        val, dval = @goertzel_deriv z c0 c1
+        val, dval = SP.@goertzel_deriv z c0 c1
         @test abs(val - true_val) < 1e-14
         @test abs(dval - true_dval) < 1e-14
-        val, dval = @horner_deriv z c0 c1
+        val, dval = SP.@horner_deriv z c0 c1
         @test abs(val - true_val) < 1e-14
         @test abs(dval - true_dval) < 1e-14
     end

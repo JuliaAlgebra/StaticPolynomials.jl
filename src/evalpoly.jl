@@ -1,40 +1,38 @@
-export @evalpoly_deriv, @goertzel_deriv, @horner_deriv
+export @evalpoly_derivative, @goertzel_deriv, @horner_deriv
 
-
-macro goertzel(z, p...)
-    if length(p) == 1
-        return :($(esc(p[end])))
-    end
-    a = :($(esc(p[end])))
-    b = :($(esc(p[end-1])))
-
-    if length(p) == 2
-        return :(muladd($a, $(esc(z)), $b))
-    end
-
-    as = []
-    for i = length(p)-2:-1:1
-        ai = Symbol("a", i)
-        push!(as, :($ai = $a))
-        a = :(muladd(r, $ai, $b))
-        b = :(muladd(s, $ai, $(esc(p[i]))))
-    end
-    ai = :a0
-    push!(as, :($ai = $a))
-    C = Expr(:block,
-             :(x = real(tt)),
-             :(y = imag(tt)),
-             :(r = x + x),
-             :(s = -muladd(x, x, y*y)),
-             as...,
-             :(muladd($ai, tt, $b)))
-    :(let tt = $(esc(z))
-          $C
-      end)
-end
 
 """
-    @evalpoly_deriv(z, c...)
+    evalpoly(::Type{T}, degrees, coefficients, var::Union{Symbol, Expr})
+
+Evaluate the polynomial defined by the degrees and coefficients.
+"""
+function evalpoly(::Type{T}, degrees::AbstractVector, coefficients::AbstractVector, var) where T
+    normalized_coeffs = normalized_coefficients(T, degrees, coefficients)
+
+    if length(normalized_coeffs) == 1
+        return normalized_coeffs[1]
+    end
+    :(@evalpoly($var, $(normalized_coeffs...)))
+end
+
+
+"""
+    evalpoly_derivative!(exprs, ::Type{T}, degrees, coefficients, var::Union{Symbol, Expr})
+
+Evaluate the polynomial and its derivative defined by the degrees and coefficients.
+"""
+function evalpoly_derivative!(exprs, ::Type{T}, degrees::AbstractVector, coefficients::AbstractVector, var) where T
+    normalized_coeffs = normalized_coefficients(T, degrees, coefficients)
+
+    @gensym dval val
+    push!(exprs, :(($val, $dval) = @evalpoly_derivative($var, $(normalized_coeffs...))))
+
+    return val, dval
+end
+
+
+"""
+    @evalpoly_derivative(z, c...)
 
 Evaluate the polynomial ``\\sum_k c[k] z^{k-1}`` for the coefficients `c[1]`, `c[2]`, ... and its derivative;
 that is, the coefficients are given in ascending order by power of `z`.  This macro expands
@@ -52,7 +50,7 @@ julia> @evalpoly(2, 1, 1, 1)
 (7, 5)
 ```
 """
-macro evalpoly_deriv(z, p...)
+macro evalpoly_derivative(z, p...)
     R = Expr(:macrocall, Symbol("@horner_deriv"), :tt, map(esc, p)...)
     C = Expr(:macrocall, Symbol("@goertzel_deriv"), :tt, map(esc, p)...)
     :(let tt = $(esc(z))
@@ -110,6 +108,7 @@ function goertzel_deriv_impl(z, p)
 
     Expr(:block, exprs...)
 end
+
 
 function goertzel_setup!(exprs, z)
     push!(exprs,

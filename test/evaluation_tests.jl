@@ -1,12 +1,3 @@
-using TestSystems
-using StaticPolynomials
-using Base.Test
-const SP = StaticPolynomials
-using StaticArrays
-import MultivariatePolynomials
-const MP = MultivariatePolynomials
-import DynamicPolynomials: @polyvar
-
 function mp_evaluate(equations, x)
     variables = sort!(union(Iterators.flatten(MP.variables.(equations))), rev=true)
     map(equations) do f
@@ -41,7 +32,7 @@ const all_systems = [
 @testset "testsystems" begin
     for T = [Float64, Complex128]
         for name in all_systems
-            system = eval(Expr(:call, name))
+            system = eval(Expr(:call, Expr(:., :TestSystems, QuoteNode(name))))
             nvars = TestSystems.nvariables(system)
             x = SVector{nvars}(rand(T, nvars))
             eqs = TestSystems.equations(system)

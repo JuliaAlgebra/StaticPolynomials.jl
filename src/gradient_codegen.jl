@@ -33,7 +33,7 @@ function generate_gradient!(exprs, E, ::Type{T}, nvar, nterm, final=false) where
 
     if m == 1
         coeffs = [:(c[$j]) for j=nterm:nterm+n]
-        val, dval = eval_derivative_poly!(exprs, T, E[1,:], coeffs, x_(nvar))
+        val, dval = evalpoly_derivative!(exprs, T, E[1,:], coeffs, x_(nvar))
         return [val, dval]
     end
 
@@ -56,7 +56,6 @@ function generate_gradient!(exprs, E, ::Type{T}, nvar, nterm, final=false) where
         push!(exprs, :($c = $(evalpoly(T, degrees, coeffs[:, k], x_(nvar)))))
         push!(values, c)
     end
-    push!(values, dval)
 
     return values
 end

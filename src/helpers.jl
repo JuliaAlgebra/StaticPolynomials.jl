@@ -31,26 +31,6 @@ function degrees_submatrices(E)
 end
 
 
-function static_pow(expr, k::Integer)
-    if k == 2
-        :($expr * $expr)
-    elseif k == 3
-        :(($expr * $expr * $expr))
-    elseif k == 4
-        symb = gensym(:p)
-        quote
-            $symb = $expr * $expr
-            $symb * $symb
-        end
-    elseif k == 1
-        :($expr)
-    elseif k == 0
-        :(one($expr))
-    else
-        :(pow($expr, $k))
-    end
-end
-
 pow(x::AbstractFloat, k::Integer) = Base.FastMath.pow_fast(x, k)
 # simplified from Base.power_by_squaring
 function pow(x::Number, p::Integer)
