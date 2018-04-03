@@ -60,31 +60,3 @@ function generate_gradient!(exprs, E, ::Type{T}, nvar, nterm, final=false) where
 
     return values
 end
-
-function monomial_product_val_derivatives(::Type{T}, exps::AbstractVector, coefficient) where T
-    val = monomial_product_derivative(T, exps, coefficient, nothing)
-    dvals = map(1:length(exps)) do i
-        monomial_product_derivative(T, exps, coefficient, i)
-    end
-
-    val, dvals
-end
-
-function monomial_product_derivative(::Type{T}, exps::AbstractVector, coefficient, i::Union{Void, Int}) where T
-    if i !== nothing && exps[i] == 0
-        return :(zero($T))
-    end
-    ops = []
-    push!(ops, coefficient)
-    for (k, e) in enumerate(exps)
-        if k == i && e == 1
-            continue
-        elseif k == i && e > 1
-            unshift!(ops, :($e))
-            push!(ops, :($(x_(k))^$(e - 1)))
-        else
-            push!(ops, :($(x_(k))^$e))
-        end
-    end
-    batch_arithmetic_ops(:*, ops)
-end

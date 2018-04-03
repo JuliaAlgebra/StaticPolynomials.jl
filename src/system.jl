@@ -141,7 +141,7 @@ module Systems
             end
 
 
-            function jacobian!(u::AbstractMatrix, S::$(name), x::AbstractVector)
+            function jacobian!(u::AbstractMatrix, S::$(name){T, N}, x::AbstractVector) where {T, N}
                 @boundscheck length(x) ≥ N
                 $(Expr(:block, [:(@inbounds u[$i, :] .= evaluate_gradient(S.$(fs[i]), x)) for i in 1:n]...))
                 u

@@ -24,6 +24,7 @@ end
     @test SP.system(g1, g2) isa SP.AbstractSystem{Int64, 2, 2}
     @test SP.system(g1, g2, g2) isa SP.AbstractSystem{Int64, 3, 2}
     @test SP.system([f1, f2, y, x]) isa SP.AbstractSystem{Int64, 4, 2}
+    @test length(SP.system([f1, f2, y, x])) == 4
     @test coefficienttype(SP.system(g1, g2)) == Int64
 end
 
@@ -51,4 +52,13 @@ end
     w = SVector{2}(w)
     @test evaluate(G, w) isa SVector{2}
     @test [evaluate(g1, w), evaluate(g2, w)] == evaluate(G, w)
+end
+
+@testset "helpers" begin
+    x = rand()
+    z = rand(Complex128)
+    for k = 4:15
+        @test abs(SP.pow(x, k) - x^k) < 1e-14
+        @test abs(SP.pow(z, k) - z^k) < 1e-14
+    end
 end

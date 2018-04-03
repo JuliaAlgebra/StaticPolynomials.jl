@@ -39,8 +39,10 @@ using TestSystems
             eqs = TestSystems.equations(system)
 
             @test norm(sp_evaluate(eqs, x) - mp_evaluate(eqs, x)) < 1e-14
+            @test norm(sp_evaluate(eqs, Vector(x)) - mp_evaluate(eqs, x)) < 1e-14
 
             @test norm(sp_jacobian(eqs, x) - mp_jacobian(eqs, x)) < 1e-14
+            @test norm(sp_jacobian(eqs, Vector(x)) - mp_jacobian(eqs, x)) < 1e-14
         end
     end
 end

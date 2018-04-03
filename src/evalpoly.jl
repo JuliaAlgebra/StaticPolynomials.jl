@@ -152,7 +152,7 @@ function goertzel_deriv_main!(exprs, z, p)
     if length(p) == 3
         lm = :($(p[end]))
         push!(exprs, :(t = y + y))
-        dval = @q begin
+        dval = quote
             if isa(r1, Complex)
                 complex(real(r1) - t * imag($lm), imag(r1) + t * real($lm))
             else
@@ -167,7 +167,7 @@ function goertzel_deriv_main!(exprs, z, p)
         push!(exprs, :(dr0 = muladd($dr1, $z, $dr0)))
 
         push!(exprs, :(t = y + y))
-        dval = @q begin
+        dval = quote
             if isa(r1, Complex)
                 complex(real(r1) - t * imag(dr0), imag(r1) + t * real(dr0))
             else
