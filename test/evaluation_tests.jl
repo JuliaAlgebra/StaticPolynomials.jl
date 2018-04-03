@@ -28,11 +28,12 @@ const all_systems = [
     :cyclic5, :cyclic6, :cyclic7, :cyclic8,
     :fourbar, :rps10]
 
+using TestSystems
 
 @testset "testsystems" begin
     for T = [Float64, Complex128]
         for name in all_systems
-            system = eval(Expr(:call, Expr(:., :TestSystems, QuoteNode(name))))
+            system = eval(Expr(:call, name))
             nvars = TestSystems.nvariables(system)
             x = SVector{nvars}(rand(T, nvars))
             eqs = TestSystems.equations(system)
