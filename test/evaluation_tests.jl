@@ -1,12 +1,3 @@
-using TestSystems
-using StaticPolynomials
-using Base.Test
-const SP = StaticPolynomials
-using StaticArrays
-import MultivariatePolynomials
-const MP = MultivariatePolynomials
-import DynamicPolynomials: @polyvar
-
 function mp_evaluate(equations, x)
     variables = sort!(union(Iterators.flatten(MP.variables.(equations))), rev=true)
     map(equations) do f
@@ -37,6 +28,7 @@ const all_systems = [
     :cyclic5, :cyclic6, :cyclic7, :cyclic8,
     :fourbar, :rps10]
 
+using TestSystems
 
 @testset "testsystems" begin
     for T = [Float64, Complex128]
@@ -47,8 +39,10 @@ const all_systems = [
             eqs = TestSystems.equations(system)
 
             @test norm(sp_evaluate(eqs, x) - mp_evaluate(eqs, x)) < 1e-14
+            @test norm(sp_evaluate(eqs, Vector(x)) - mp_evaluate(eqs, x)) < 1e-14
 
             @test norm(sp_jacobian(eqs, x) - mp_jacobian(eqs, x)) < 1e-14
+            @test norm(sp_jacobian(eqs, Vector(x)) - mp_jacobian(eqs, x)) < 1e-14
         end
     end
 end

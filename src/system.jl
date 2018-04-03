@@ -23,7 +23,14 @@ function system(polys::AbstractVector{<:MP.AbstractPolynomial})
     variables = sort!(union(Iterators.flatten(MP.variables.(polys))), rev=true)
     system(map(p -> Polynomial(p, variables), polys)...)
 end
-@inline system(polys...) = Systems.system(polys...)
+function system(polys...)
+    n = length(polys)
+    if !isdefined(Systems, Symbol("System", n))
+        Systems.create_system(n)
+    end
+
+    return Base.invokelatest(Systems.system, polys...)
+end
 
 """
     evaluate!(u, F::AbstractSystem, x)
@@ -91,9 +98,8 @@ coefficienttype(::AbstractSystem{T}) where {T} = T
 module Systems
 
     using ..StaticPolynomials
-    import ..StaticPolynomials: evaluate, evaluate!, system, evaluate_gradient
+    import ..StaticPolynomials: evaluate, evaluate!, jacobian, jacobian!, system, evaluate_gradient
     import StaticArrays: SVector, SMatrix
-
 
     function assemble_matrix_impl(::Type{SVector{M, SVector{N, T}}}) where {T, N, M}
         quote
@@ -135,7 +141,7 @@ module Systems
             end
 
 
-            function jacobian!(u::AbstractMatrix, S::$(name), x::AbstractVector)
+            function jacobian!(u::AbstractMatrix, S::$(name){T, N}, x::AbstractVector) where {T, N}
                 @boundscheck length(x) ≥ N
                 $(Expr(:block, [:(@inbounds u[$i, :] .= evaluate_gradient(S.$(fs[i]), x)) for i in 1:n]...))
                 u
@@ -154,9 +160,5 @@ module Systems
 
     function create_system(n)
         eval(create_system_impl(n))
-    end
-
-    for n=2:32
-        create_system(n)
     end
 end

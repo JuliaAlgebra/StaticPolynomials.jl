@@ -33,7 +33,7 @@ function generate_gradient!(exprs, E, ::Type{T}, nvar, nterm, final=false) where
 
     if m == 1
         coeffs = [:(c[$j]) for j=nterm:nterm+n]
-        val, dval = eval_derivative_poly!(exprs, T, E[1,:], coeffs, x_(nvar))
+        val, dval = evalpoly_derivative!(exprs, T, E[1,:], coeffs, x_(nvar))
         return [val, dval]
     end
 
@@ -49,7 +49,7 @@ function generate_gradient!(exprs, E, ::Type{T}, nvar, nterm, final=false) where
 
     # Now we have to evaluate polynomials
     # for our current variable we need our new partial derivative
-    val, dval = eval_derivative_poly!(exprs, T, degrees, coeffs[:, 1], x_(nvar))
+    val, dval = evalpoly_derivative!(exprs, T, degrees, coeffs[:, 1], x_(nvar))
     values = [val]
     for k=2:m
         @gensym c
@@ -59,32 +59,4 @@ function generate_gradient!(exprs, E, ::Type{T}, nvar, nterm, final=false) where
     push!(values, dval)
 
     return values
-end
-
-function monomial_product_val_derivatives(::Type{T}, exps::AbstractVector, coefficient) where T
-    val = monomial_product_derivative(T, exps, coefficient, nothing)
-    dvals = map(1:length(exps)) do i
-        monomial_product_derivative(T, exps, coefficient, i)
-    end
-
-    val, dvals
-end
-
-function monomial_product_derivative(::Type{T}, exps::AbstractVector, coefficient, i::Union{Void, Int}) where T
-    if i !== nothing && exps[i] == 0
-        return :(zero($T))
-    end
-    ops = []
-    push!(ops, coefficient)
-    for (k, e) in enumerate(exps)
-        if k == i && e == 1
-            continue
-        elseif k == i && e > 1
-            unshift!(ops, :($e))
-            push!(ops, :($(x_(k))^$(e - 1)))
-        else
-            push!(ops, :($(x_(k))^$e))
-        end
-    end
-    batch_arithmetic_ops(:*, ops)
 end

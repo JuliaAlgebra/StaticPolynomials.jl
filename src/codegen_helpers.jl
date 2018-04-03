@@ -1,10 +1,4 @@
 x_(i::Int) = :(x[$i])
-x_(ik::NTuple{2, Int}) = ik[2] == 1 ? x_(ik[1]) : Symbol("x", ik[1], "_", ik[2])
-u_(i::Int) = Symbol("u", i)
-u_(i1::Int, i2::Int) = Symbol("u", i1, "_", i2)
-u_(ik::NTuple{2, Int}) = ik[2] == 1 ? u_(ik[1]) : Symbol("u", ik[1], "_", ik[2])
-c_(i::Int) = Symbol("c", i)
-c_(i::Int, d::Int) = Symbol("c_", i, "_", d)
 
 """
     batch_arithmetic_ops(op, operands)
@@ -35,36 +29,6 @@ function batch_arithmetic_ops(op::Symbol, ops)
     else
         return batches[1]
     end
-end
-
-"""
-    evalpoly(::Type{T}, degrees, coefficients, var::Union{Symbol, Expr})
-
-Evaluate the polynomial defined by the degrees and coefficients.
-"""
-function evalpoly(::Type{T}, degrees::AbstractVector, coefficients::AbstractVector, var) where T
-    normalized_coeffs = normalized_coefficients(T, degrees, coefficients)
-
-    if length(normalized_coeffs) == 1
-        return normalized_coeffs[1]
-    end
-    # TODO: Be smarter since we know the zeros...
-    :(@evalpoly($var, $(normalized_coeffs...)))
-end
-
-
-"""
-    eval_derivative_poly(::Type{T}, degrees, coefficients, var::Union{Symbol, Expr})
-
-Evaluate the polynomial and its derivative defined by the degrees and coefficients.
-"""
-function eval_derivative_poly!(exprs, ::Type{T}, degrees::AbstractVector, coefficients::AbstractVector, var) where T
-    normalized_coeffs = normalized_coefficients(T, degrees, coefficients)
-
-    @gensym dval val
-    push!(exprs, :(($val, $dval) = @evalpoly_deriv($var, $(normalized_coeffs...))))
-
-    return val, dval
 end
 
 
@@ -98,7 +62,6 @@ function normalized_coefficients(::Type{T}, degrees::AbstractVector, coefficient
 end
 
 
-
 """
     monomial_product(::Type{T}, exponent, coefficient, i::Union{Void, Int}=nothing)
 
@@ -117,15 +80,15 @@ function monomial_product(::Type{T}, exponent::AbstractVector, coefficient, i::U
         elseif k == i && e > 1
             unshift!(ops, :($e))
             if e > 2
-                push!(ops, :($(x_(k))^$(e - 1)))
+                push!(ops, pow(x_(k), e - 1))
             else
                 # e = 1
-                push!(ops, :($(x_(k))))
+                push!(ops, x_(k))
             end
         elseif e == 1
-            push!(ops, :($(x_(k))))
+            push!(ops, x_(k))
         elseif e > 1
-            push!(ops, :($(x_(k))^$e))
+            push!(ops, pow(x_(k), e))
         end
     end
     batch_arithmetic_ops(:*, ops)
@@ -139,4 +102,25 @@ function monomial_product_with_derivatives(::Type{T}, exponent::AbstractVector, 
     end
 
     val, dvals
+end
+
+
+function pow(expr::Union{Expr,Symbol}, k::Integer)
+    if k == 2
+        :($expr * $expr)
+    elseif k == 3
+        :(($expr * $expr * $expr))
+    elseif k == 4
+        @gensym p
+        quote
+            $p = $expr * $expr
+            $p * $p
+        end
+    elseif k == 1
+        :($expr)
+    elseif k == 0
+        :(one($expr))
+    else
+        :(pow($expr, $k))
+    end
 end
