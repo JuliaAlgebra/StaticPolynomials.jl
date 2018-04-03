@@ -1,10 +1,4 @@
 x_(i::Int) = :(x[$i])
-x_(ik::NTuple{2, Int}) = ik[2] == 1 ? x_(ik[1]) : Symbol("x", ik[1], "_", ik[2])
-u_(i::Int) = Symbol("u", i)
-u_(i1::Int, i2::Int) = Symbol("u", i1, "_", i2)
-u_(ik::NTuple{2, Int}) = ik[2] == 1 ? u_(ik[1]) : Symbol("u", ik[1], "_", ik[2])
-c_(i::Int) = Symbol("c", i)
-c_(i::Int, d::Int) = Symbol("c_", i, "_", d)
 
 """
     batch_arithmetic_ops(op, operands)
@@ -86,15 +80,15 @@ function monomial_product(::Type{T}, exponent::AbstractVector, coefficient, i::U
         elseif k == i && e > 1
             unshift!(ops, :($e))
             if e > 2
-                push!(ops, :($(x_(k))^$(e - 1)))
+                push!(ops, pow(x_(k), e - 1))
             else
                 # e = 1
-                push!(ops, :($(x_(k))))
+                push!(ops, x_(k))
             end
         elseif e == 1
-            push!(ops, :($(x_(k))))
+            push!(ops, x_(k))
         elseif e > 1
-            push!(ops, :($(x_(k))^$e))
+            push!(ops, pow(x_(k), e))
         end
     end
     batch_arithmetic_ops(:*, ops)
@@ -117,10 +111,10 @@ function pow(expr::Union{Expr,Symbol}, k::Integer)
     elseif k == 3
         :(($expr * $expr * $expr))
     elseif k == 4
-        symb = gensym(:p)
+        @gensym p
         quote
-            $symb = $expr * $expr
-            $symb * $symb
+            $p = $expr * $expr
+            $p * $p
         end
     elseif k == 1
         :($expr)

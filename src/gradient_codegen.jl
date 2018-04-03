@@ -49,13 +49,14 @@ function generate_gradient!(exprs, E, ::Type{T}, nvar, nterm, final=false) where
 
     # Now we have to evaluate polynomials
     # for our current variable we need our new partial derivative
-    val, dval = eval_derivative_poly!(exprs, T, degrees, coeffs[:, 1], x_(nvar))
+    val, dval = evalpoly_derivative!(exprs, T, degrees, coeffs[:, 1], x_(nvar))
     values = [val]
     for k=2:m
         @gensym c
         push!(exprs, :($c = $(evalpoly(T, degrees, coeffs[:, k], x_(nvar)))))
         push!(values, c)
     end
+    push!(values, dval)
 
     return values
 end

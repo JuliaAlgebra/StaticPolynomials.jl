@@ -3,6 +3,8 @@ const SP = StaticPolynomials
 using Base.Test
 using StaticArrays
 import DynamicPolynomials: @polyvar
+import MultivariatePolynomials
+const MP = MultivariatePolynomials
 import TestSystems
 
 
