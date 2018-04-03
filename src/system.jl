@@ -119,14 +119,15 @@ module Systems
                 $(name){T, N, $(Es...)}($(fs...))
             end
 
-            function evaluate!(u::AbstractVector, S::$(name), x::AbstractVector)
-                $(Expr(:block, [:(u[$i] = evaluate(S.$(fs[i]), x)) for i in 1:n]...))
+            function evaluate!(u::AbstractVector, S::$(name){T, N}, x::AbstractVector) where {T, N}
+                @boundscheck length(x) ≥ N
+                $(Expr(:block, [:(@inbounds u[$i] = evaluate(S.$(fs[i]), x)) for i in 1:n]...))
                 u
             end
 
             function evaluate(system::$(name){T, N}, x::SVector{N, S}) where {T, S, N}
                 $(Expr(:block,
-                    (:($(Symbol("u_", i)) = evaluate(system.$(fs[i]), x)) for i in 1:n)...,
+                    (:(@inbounds $(Symbol("u_", i)) = evaluate(system.$(fs[i]), x)) for i in 1:n)...,
                     :(SVector(
                         $((Symbol("u_", i) for i=1:n)...)
                     ))
@@ -135,13 +136,14 @@ module Systems
 
 
             function jacobian!(u::AbstractMatrix, S::$(name), x::AbstractVector)
-                $(Expr(:block, [:(u[$i, :] .= evaluate_gradient(S.$(fs[i]), x)) for i in 1:n]...))
+                @boundscheck length(x) ≥ N
+                $(Expr(:block, [:(@inbounds u[$i, :] .= evaluate_gradient(S.$(fs[i]), x)) for i in 1:n]...))
                 u
             end
 
             function jacobian(system::$(name){T, N}, x::SVector{N, S}) where {T, S, N}
                 $(Expr(:block,
-                    (:($(Symbol("∇", i)) = evaluate_gradient(system.$(fs[i]), x)) for i in 1:n)...,
+                    (:(@inbounds $(Symbol("∇", i)) = evaluate_gradient(system.$(fs[i]), x)) for i in 1:n)...,
                     :(assemble_matrix(SVector(
                         $((Symbol("∇", i) for i=1:n)...)
                     )))
