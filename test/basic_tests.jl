@@ -48,6 +48,7 @@ end
 
     w = rand(2)
     @test [evaluate(g1, w), evaluate(g2, w)] == evaluate(G, w)
+    @test [g1(w), g2(w)] == evaluate(G, w)
 
     w = SVector{2}(w)
     @test evaluate(G, w) isa SVector{2}

@@ -11,6 +11,32 @@ import DynamicPolynomials: @polyvar
 
 F = SP.system(TestSystems.equations(TestSystems.rps10()))
 
+x = rand(10)
+x2 = SVector{10}(x)
+SP.evaluate_and_jacobian(F, x)
+SP.evaluate_and_jacobian(F, x2)
+u = zeros(10)
+U = zeros(10, 10)
+
+SP.evaluate_and_jacobian!(u, U, F, x)
+u
+U
+
+f = F.f1
+
+u = zeros(10)
+SP.evaluate_gradient!(u, f, (@SVector rand(10)))
+u
+
+unrolled_assemble_matrix([:V1, :V2], Float64, 4)
+n = 2
+function unrolled_assemble_matrix(vecs, T, N)
+    ops = []
+    for i=1:N, j=1:n
+        push!(ops, :($(vecs[j])[$i]))
+    end
+    :(SMatrix{$n, $N, $T, $(n*N)}($(Expr(:tuple, ops...))))
+end
 
 
 

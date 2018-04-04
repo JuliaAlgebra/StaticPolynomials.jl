@@ -43,6 +43,17 @@ using TestSystems
 
             @test norm(sp_jacobian(eqs, x) - mp_jacobian(eqs, x)) < 1e-14
             @test norm(sp_jacobian(eqs, Vector(x)) - mp_jacobian(eqs, x)) < 1e-14
+
+            F = SP.system(eqs)
+            val, jac = SP.evaluate_and_jacobian(F, x)
+            @test norm(val - mp_evaluate(eqs, x)) < 1e-14
+            @test norm(F(x) - mp_evaluate(eqs, x)) < 1e-14
+            @test norm(jac - mp_jacobian(eqs, x)) < 1e-14
+
+            val, jac = SP.evaluate_and_jacobian(F, Vector(x))
+            @test norm(val - mp_evaluate(eqs, x)) < 1e-14
+            @test norm(F(x) - mp_evaluate(eqs, x)) < 1e-14
+            @test norm(jac - mp_jacobian(eqs, x)) < 1e-14
         end
     end
 end

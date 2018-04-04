@@ -40,17 +40,11 @@ Evaluate the system `F` at `x` and store the result in `u`.
 @inline evaluate!(u, S::AbstractSystem, x) = Systems.evaluate!(u, S, x)
 
 """
-    evaluate(F::AbstractSystem, x)
-    evaluate(F::AbstractSystem, x::SVector)
+    evaluate(F::AbstractSystem, x::AbstractVector)
 
 Evaluate the system `F` at `x`.
 """
-@inline function evaluate(S::AbstractSystem{T1, M, N}, x::SVector{N, T2}) where {T1, T2, M, N}
-    Systems.evaluate(S, x)
-end
-@inline function evaluate(S::AbstractSystem{T1, M}, x::AbstractVector{T2}) where {T1, M, T2}
-    Systems.evaluate!(Vector{promote_type(T1, T2)}(M), S, x)
-end
+evaluate(S::AbstractSystem, x::AbstractVector) = Systems.evaluate(S, x)
 
 
 """
@@ -71,6 +65,31 @@ Evaluate the Jacobian of the system `F` at `x`.
 end
 @inline function jacobian(S::AbstractSystem{T1, M, N}, x::AbstractVector{T2}) where {T1, M, N, T2}
     Systems.jacobian!(Matrix{promote_type(T1, T2)}(M, N), S, x)
+end
+
+"""
+    evaluate_and_jacobian!(u, U, F::AbstractSystem, x)
+
+Evaluate the system `F` and its Jacobian at `x` and store the results in `u` (evalution)
+and `U` (Jacobian).
+"""
+@inline evaluate_and_jacobian!(u, U, S::AbstractSystem, x) = Systems.evaluate_and_jacobian!(u, U, S, x)
+
+"""
+    evaluate_and_jacobian(F::AbstractSystem, x)
+    evaluate_and_jacobian(F::AbstractSystem, x::SVector)
+
+Evaluate the system `F` and its Jacobian at `x`.
+"""
+@inline function evaluate_and_jacobian(S::AbstractSystem{T1, M, N}, x::SVector{N, T2}) where {T1, T2, M, N}
+    Systems.evaluate_and_jacobian(S, x)
+end
+@inline function evaluate_and_jacobian(S::AbstractSystem{T1, M, N}, x::AbstractVector{T2}) where {T1, M, N, T2}
+    T = typeof(one(T1) * one(T2))
+    u = Vector{T}(M)
+    U = Matrix{T}(M, N)
+    Systems.evaluate_and_jacobian!(u, U, S, x)
+    u, U
 end
 """
     nvariables(F::AbstractSystem)
@@ -98,7 +117,7 @@ coefficienttype(::AbstractSystem{T}) where {T} = T
 module Systems
 
     using ..StaticPolynomials
-    import ..StaticPolynomials: evaluate, evaluate!, jacobian, jacobian!, system, evaluate_gradient
+    import ..StaticPolynomials: evaluate, evaluate!, jacobian, jacobian!, system, evaluate_and_jacobian, evaluate_and_jacobian!
     import StaticArrays: SVector, SMatrix
 
     function assemble_matrix_impl(::Type{SVector{M, SVector{N, T}}}) where {T, N, M}
@@ -109,6 +128,18 @@ module Systems
         end
     end
     @inline @generated assemble_matrix(vectors::SVector{N, <:SVector}) where N = assemble_matrix_impl(vectors)
+
+    function unrolled_assemble_matrix(vecs, T, N)
+        ops = []
+        for i=1:N, j=1:n
+            push!(ops, :($(vecs[j])[$i]))
+        end
+        :(SMatrix{$n, $N, $T, $(n*N)}($(Expr(:tuple, ops...))))
+    end
+
+    function evaluate(S::AbstractSystem{T1, M}, x::AbstractVector{T2}) where {T1, M, T2}
+        evaluate!(Vector{promote_type(T1, T2)}(M), S, x)
+    end
 
     function create_system_impl(n)
         fs = [Symbol("f", i) for i=1:n]
@@ -140,20 +171,54 @@ module Systems
                 ))
             end
 
+            (F::$(name))(x::AbstractVector) = evaluate(F, x)
 
             function jacobian!(u::AbstractMatrix, S::$(name){T, N}, x::AbstractVector) where {T, N}
                 @boundscheck length(x) ≥ N
-                $(Expr(:block, [:(@inbounds u[$i, :] .= evaluate_gradient(S.$(fs[i]), x)) for i in 1:n]...))
+                $(Expr(:block, [:(@inbounds u[$i, :] .= StaticPolynomials._gradient(S.$(fs[i]), x)) for i in 1:n]...))
                 u
             end
 
             function jacobian(system::$(name){T, N}, x::SVector{N, S}) where {T, S, N}
                 $(Expr(:block,
-                    (:(@inbounds $(Symbol("∇", i)) = evaluate_gradient(system.$(fs[i]), x)) for i in 1:n)...,
+                    (:(@inbounds $(Symbol("∇", i)) = StaticPolynomials._gradient(system.$(fs[i]), x)) for i in 1:n)...,
                     :(assemble_matrix(SVector(
-                        $((Symbol("∇", i) for i=1:n)...)
+                        $(Expr(:tuple, (Symbol("∇", i) for i=1:n)...))
                     )))
                 ))
+            end
+
+            function evaluate_and_jacobian!(u::AbstractVector, U::AbstractMatrix, S::$(name){T, N}, x::AbstractVector) where {T, N}
+                @boundscheck length(x) ≥ N
+                $(begin
+                    u = [Symbol("u", i) for i = 1:n]
+                    ∇ = [Symbol("∇", i) for i = 1:n]
+                    exprs = Expr[]
+                    for i=1:n
+                        lhs = Expr(:tuple, u[i], ∇[i])
+                        push!(exprs, :($lhs = StaticPolynomials._val_gradient(S.$(fs[i]), x)))
+                        push!(exprs, :(u[$i] = $(u[i])))
+                        push!(exprs, :(U[$i, :] .= $(∇[i])))
+                    end
+                    Expr(:block, exprs..., :(nothing))
+                end)
+            end
+
+            function evaluate_and_jacobian(S::$(name){T, N}, x::SVector{N, T2}) where {T, T2, N}
+                $(begin
+                    u = [Symbol("u", i) for i = 1:n]
+                    ∇ = [Symbol("∇", i) for i = 1:n]
+                    exprs = Expr[]
+                    for i=1:n
+                        lhs = Expr(:tuple, u[i], ∇[i])
+                        push!(exprs, :($lhs = StaticPolynomials._val_gradient(S.$(fs[i]), x)))
+                    end
+                    val = :(SVector($(Expr(:tuple, u...))))
+                    jac = :(assemble_matrix(SVector($(Expr(:tuple, ∇...)))))
+                    push!(exprs, :(val = $val))
+                    push!(exprs, :(jac = $jac))
+                    Expr(:block, exprs..., :((val, jac)))
+                end)
             end
         end
     end
