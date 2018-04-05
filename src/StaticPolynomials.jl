@@ -4,9 +4,17 @@ module StaticPolynomials
 
     import MultivariatePolynomials
     const MP = MultivariatePolynomials
+    import StaticArrays: SVector, SMatrix
 
-    import StaticArrays: SVector
-    import Base: gradient
+    using Compat
+    using Compat.LinearAlgebra
+
+    if VERSION <= v"0.6.2"
+        import Base: gradient
+    else
+        import LinearAlgebra: gradient
+    end
+
 
     include("helpers.jl")
     include("sexponents.jl")

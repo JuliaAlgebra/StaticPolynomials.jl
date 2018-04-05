@@ -95,7 +95,7 @@ const all_systems = [
     :cyclic5, :cyclic6, :cyclic7, :cyclic8,
     :fourbar, :rps10]
 
-for T in [Float64, Complex128]
+for T in [Float64, Complex{Float64}]
     T_str = string(T)
     SUITE["evaluate"][T_str] = BenchmarkGroup()
     SUITE["jacobian"][T_str] = BenchmarkGroup()

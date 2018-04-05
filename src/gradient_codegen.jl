@@ -41,7 +41,7 @@ function generate_gradient!(exprs, E, ::Type{T}, nvar, nterm, final=false) where
     degrees, submatrices = degrees_submatrices(E)
     # For each coefficient we have the actual coefficent plus each partial derivative
     # of the other variables
-    coeffs = Matrix{Symbol}(length(submatrices), m)
+    coeffs = Matrix{Symbol}(undef, length(submatrices), m)
     for (k, E_d) in enumerate(submatrices)
         coeffs[k, :] = generate_gradient!(exprs, E_d, T, nvar - 1, nterm)
         nterm += size(E_d, 2)

@@ -63,12 +63,12 @@ end
 
 
 """
-    monomial_product(::Type{T}, exponent, coefficient, i::Union{Void, Int}=nothing)
+    monomial_product(::Type{T}, exponent, coefficient, i::Union{Nothing, Int}=nothing)
 
 Generate the monomial product defined by `exponent` with `ooefficient.`
 If `i` is an `Int` the partial derivative will be generated.
 """
-function monomial_product(::Type{T}, exponent::AbstractVector, coefficient, i::Union{Void, Int}=nothing) where T
+function monomial_product(::Type{T}, exponent::AbstractVector, coefficient, i::Union{Nothing, Int}=nothing) where T
     if i !== nothing && exponent[i] == 0
         return :(zero($T))
     end
@@ -78,7 +78,7 @@ function monomial_product(::Type{T}, exponent::AbstractVector, coefficient, i::U
         if k == i && e == 1
             continue
         elseif k == i && e > 1
-            unshift!(ops, :($e))
+            pushfirst!(ops, :($e))
             if e > 2
                 push!(ops, pow(x_(k), e - 1))
             else
