@@ -34,7 +34,7 @@ Sorts the columns of `A` in reverse lexicographic order and returns the permutat
 to obtain this ordering.
 """
 function revlexicographic_cols(A::AbstractMatrix; kws...)
-    inds = axes(A,2)
+    inds = Compat.axes(A,2)
     T = Base.Sort.slicetypeof(A, :, inds)
     cols = map(i -> (@view A[end:-1:1, i]), inds)
     if VERSION <= v"0.6.2"
