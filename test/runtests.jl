@@ -5,8 +5,10 @@ using StaticArrays
 import DynamicPolynomials: @polyvar
 import MultivariatePolynomials
 const MP = MultivariatePolynomials
+using Compat
 import TestSystems
 
+using Compat.LinearAlgebra
 
 include("codegen_tests.jl")
 include("basic_tests.jl")

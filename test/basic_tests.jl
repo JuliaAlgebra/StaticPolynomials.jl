@@ -1,5 +1,5 @@
 @testset "constructors" begin
-    A = round.(Int, max.(0.0, 5 * rand(6, 10) - 1))
+    A = round.(Int, max.(0.0, 5 * rand(6, 10) .- 1))
     f = Polynomial(rand(10), A)
     @test typeof(f) <: Polynomial{Float64, 6, <:SExponents}
 
@@ -57,7 +57,7 @@ end
 
 @testset "helpers" begin
     x = rand()
-    z = rand(Complex128)
+    z = rand(Complex{Float64})
     for k = 4:15
         @test abs(SP.pow(x, k) - x^k) < 1e-14
         @test abs(SP.pow(z, k) - z^k) < 1e-14

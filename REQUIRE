@@ -1,3 +1,4 @@
 julia 0.6
 MultivariatePolynomials
 StaticArrays
+Compat 0.61

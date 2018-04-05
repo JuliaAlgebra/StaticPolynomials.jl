@@ -34,10 +34,14 @@ Sorts the columns of `A` in reverse lexicographic order and returns the permutat
 to obtain this ordering.
 """
 function revlexicographic_cols(A::AbstractMatrix; kws...)
-    inds = indices(A,2)
+    inds = axes(A,2)
     T = Base.Sort.slicetypeof(A, :, inds)
     cols = map(i -> (@view A[end:-1:1, i]), inds)
-    p = sortperm(cols; kws..., order=Base.Sort.Lexicographic)
+    if VERSION <= v"0.6.2"
+        p = sortperm(cols; kws..., order=Base.Sort.Lexicographic)
+    else
+        p = sortperm(cols; kws...)
+    end
     A[:,p], p
 end
 
@@ -46,8 +50,8 @@ function Polynomial(p::MP.AbstractPolynomialLike{T}, vars = MP.variables(p)) whe
     nterms = length(terms)
     nvars = length(vars)
 
-    exponents = Matrix{Int}(nvars, nterms)
-    coefficients = Vector{T}(nterms)
+    exponents = Matrix{Int}(undef, nvars, nterms)
+    coefficients = Vector{T}(undef, nterms)
     for (j, term) in enumerate(terms)
         coefficients[j] = MP.coefficient(term)
         for (i, var) in enumerate(vars)

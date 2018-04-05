@@ -31,7 +31,7 @@ const all_systems = [
 using TestSystems
 
 @testset "testsystems" begin
-    for T = [Float64, Complex128]
+    for T = [Float64, Complex{Float64}]
         for name in all_systems
             system = eval(Expr(:call, name))
             nvars = TestSystems.nvariables(system)

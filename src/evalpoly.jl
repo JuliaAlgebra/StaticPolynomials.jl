@@ -51,8 +51,13 @@ julia> @evalpoly(2, 1, 1, 1)
 ```
 """
 macro evalpoly_derivative(z, p...)
-    R = Expr(:macrocall, Symbol("@horner_deriv"), :tt, map(esc, p)...)
-    C = Expr(:macrocall, Symbol("@goertzel_deriv"), :tt, map(esc, p)...)
+    if VERSION <= v"0.6.2"
+        R = Expr(:macrocall, Symbol("@horner_deriv"), :tt, map(esc, p)...)
+        C = Expr(:macrocall, Symbol("@goertzel_deriv"), :tt, map(esc, p)...)
+    else
+        R = Expr(:macrocall, Symbol("@horner_deriv"), (), :tt, map(esc, p)...)
+        C = Expr(:macrocall, Symbol("@goertzel_deriv"), (), :tt, map(esc, p)...)
+    end
     :(let tt = $(esc(z))
           isa(tt, Complex) ? $C : $R
       end)
@@ -60,7 +65,7 @@ end
 
 macro horner_deriv(x, p...)
     escaped_x = :($(esc(x)))
-    escaped_p = map(c -> :($(esc(c))), p)
+    escaped_p = map(esc, p)
     horner_deriv_impl(escaped_x, escaped_p)
 end
 
@@ -86,7 +91,7 @@ end
 
 macro goertzel_deriv(z, p...)
     escaped_z = :($(esc(z)))
-    escaped_p = map(c -> :($(esc(c))), p)
+    escaped_p = map(esc, p)
     goertzel_deriv_impl(escaped_z, escaped_p)
 end
 
