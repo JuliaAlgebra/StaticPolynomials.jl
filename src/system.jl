@@ -3,7 +3,7 @@ export AbstractSystem, system, evaluate, evaluate!, jacobian, jacobian!, variabl
 abstract type AbstractSystem{T, Size, NVars} end
 
 """
-    system(polys::AbstractVector{<:MP.AbstractPolynomial}...)
+    system(polys::AbstractVector{<:MP.AbstractPolynomial}..., variables=sorted_variables(polys))
     system(polys...)
 
 Create a system of polynomials from the given `polys`.
@@ -19,10 +19,13 @@ julia> F isa AbstractSystem{Int64, 3, 2}
 true
 ```
 """
-function system(polys::AbstractVector{<:MP.AbstractPolynomial})
-    variables = sort!(union(Iterators.flatten(MP.variables.(polys))), rev=true)
-    system(map(p -> Polynomial(p, variables), polys)...)
+function system(polys::AbstractVector{<:MP.AbstractPolynomial}, vars=sorted_variables(polys))
+    system(map(p -> Polynomial(p, vars), polys)...)
 end
+function sorted_variables(polys::AbstractVector{<:MP.AbstractPolynomial})
+    sort!(union(Iterators.flatten(MP.variables.(polys))), rev=true)
+end
+
 function system(polys...)
     n = length(polys)
     if !isdefined(Systems, Symbol("System", n))
