@@ -168,9 +168,17 @@ module Systems
 
             (F::$(name))(x::AbstractVector) = evaluate(F, x)
 
-            function _jacobian!(u::AbstractMatrix, S::$(name){T, N}, x::AbstractVector) where {T, N}
+            function _jacobian!(u::AbstractMatrix, F::$(name){T, N}, x::AbstractVector) where {T, N}
                 @boundscheck length(x) ≥ N
-                $(Expr(:block, [:(@inbounds u[$i, :] = StaticPolynomials._gradient(S.$(fs[i]), x)) for i in 1:n]...))
+                $(Expr(:block,
+                    (:(@inbounds $(Symbol("∇", i)) = StaticPolynomials._gradient(F.$(fs[i]), x)) for i in 1:n)...,
+                    quote
+                        for j=1:N
+                            $([:(u[$i, j] = $(Symbol("∇", i))[j]) for i in 1:n]...)
+                        end
+                    end
+                ))
+
                 u
             end
 
@@ -193,9 +201,15 @@ module Systems
                         lhs = Expr(:tuple, u[i], ∇[i])
                         push!(exprs, :($lhs = StaticPolynomials._val_gradient(S.$(fs[i]), x)))
                         push!(exprs, :(u[$i] = $(u[i])))
-                        push!(exprs, :(U[$i, :] = $(∇[i])))
                     end
-                    Expr(:block, exprs..., :(nothing))
+                    Expr(:block,
+                        exprs...,
+                        quote
+                            for j=1:N
+                                $([:(U[$i, j] = $(∇[i])[j]) for i in 1:n]...)
+                            end
+                        end,
+                        :(nothing))
                 end)
             end
 
