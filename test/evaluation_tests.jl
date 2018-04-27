@@ -50,6 +50,8 @@ using TestSystems
             @test norm(F(x) - mp_evaluate(eqs, x)) < 1e-14
             @test norm(jac - mp_jacobian(eqs, x)) < 1e-14
 
+            @test string(F.f1) isa String
+
             val, jac = SP.evaluate_and_jacobian(F, Vector(x))
             @test norm(val - mp_evaluate(eqs, x)) < 1e-14
             @test norm(F(x) - mp_evaluate(eqs, x)) < 1e-14
