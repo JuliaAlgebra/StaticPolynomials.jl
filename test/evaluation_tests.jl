@@ -31,6 +31,8 @@ const all_systems = [
 using TestSystems
 
 @testset "testsystems" begin
+    io = IOBuffer();
+
     for T = [Float64, Complex{Float64}]
         for name in all_systems
             system = eval(Expr(:call, name))
@@ -50,7 +52,8 @@ using TestSystems
             @test norm(F(x) - mp_evaluate(eqs, x)) < 1e-14
             @test norm(jac - mp_jacobian(eqs, x)) < 1e-14
 
-            @test string(F.f1) isa String
+            print(io, F.f1)
+            @test !isempty(String(take!(io)))
 
             val, jac = SP.evaluate_and_jacobian(F, Vector(x))
             @test norm(val - mp_evaluate(eqs, x)) < 1e-14
