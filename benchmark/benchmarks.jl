@@ -107,6 +107,7 @@ for T in [Float64, Complex{Float64}]
     T_str = string(T)
     SUITE["evaluate"][T_str] = BenchmarkGroup()
     SUITE["jacobian"][T_str] = BenchmarkGroup()
+    SUITE["static jacobian"][T_str] = BenchmarkGroup()
     for system in all_systems
         @eval begin
             sys = $(Expr(:call, system))
