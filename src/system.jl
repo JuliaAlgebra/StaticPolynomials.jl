@@ -1,5 +1,16 @@
-export AbstractSystem, system, evaluate, evaluate!, jacobian, jacobian!, variables, npolynomials, coefficienttype
+export AbstractSystem,
+    system,
+    evaluate, evaluate!,
+    jacobian, jacobian!,
+    evaluate_and_jacobian, evaluate_and_jacobian!,
+    variables, npolynomials, coefficienttype
 
+
+"""
+     AbstractSystem{T, M, N}
+
+Represents a system of `M` polynomials in `N` variables with coefficients in `T`.
+"""
 abstract type AbstractSystem{T, Size, NVars} end
 
 """
@@ -40,7 +51,7 @@ end
 
 Evaluate the system `F` at `x` and store the result in `u`.
 """
-@inline evaluate!(u, S::AbstractSystem, x) = Systems._evaluate!(u, S, x)
+@inline evaluate!(u, S::AbstractSystem, x::AbstractVector) = Systems._evaluate!(u, S, x)
 
 """
     evaluate(F::AbstractSystem, x::AbstractVector)

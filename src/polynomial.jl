@@ -4,7 +4,7 @@ export Polynomial, coefficients, exponents, nvariables, coefficienttype
 """
     Polynomial(f::MP.AbstractPolynomial, [variables])
 
-Construct a Polynomial from f.
+Construct a Polynomial from `f`.
 """
 struct Polynomial{T, NVars, E<:SExponents}
     coefficients::Vector{T}

@@ -26,10 +26,10 @@ end
 
 Evaluate the gradient of the polynomial `f` at `x`.
 """
+gradient(f::Polynomial, x::AbstractVector) = Vector(_gradient(f, x))
 function gradient(f::Polynomial{T, NVars}, x::SVector{NVars, S}) where {T, S, NVars}
     _gradient(f, x)
 end
-gradient(f::Polynomial, x::AbstractVector) = Vector(_gradient(f, x))
 
 """
     gradient!(u, f::Polynomial, x)
