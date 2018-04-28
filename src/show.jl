@@ -1,12 +1,8 @@
-import Base: print
-
-Base.show(io::IO, f::Polynomial) = print(io, typeof(f), "()")
-
-function Base.print(io::IO, p::Polynomial{T, E}) where {T, E<:SExponents}
+function Base.show(io::IO, p::Polynomial{T, N, E}) where {T,N,E}
     first = true
     cfs = coefficients(p)
 
-    exps = exponents(E)
+    exps = exponents(E, N)
     NVars, NTerms = size(exps)
 
     for j=1:NTerms
