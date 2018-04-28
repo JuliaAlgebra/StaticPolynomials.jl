@@ -1,7 +1,9 @@
 # StaticPolynomials
 
-[![Build Status](https://travis-ci.org/JuliaAlgebra/StaticPolynomials.jl.svg?branch=master)](https://travis-ci.org/JuliaAlgebra/StaticPolynomials.jl)
-[![codecov.io](http://codecov.io/github/JuliaAlgebra/StaticPolynomials.jl/coverage.svg?branch=master)](http://codecov.io/github/JuliaAlgebra/StaticPolynomials.jl?branch=master)
+| **Documentation** | **Build Status** |
+|:-----------------:|:----------------:|
+| [![][docs-stable-img]][docs-stable-url] | [![Build Status][build-img]][build-url] |
+| [![][docs-latest-img]][docs-latest-url] | [![Codecov branch][codecov-img]][codecov-url] |
 
 
 A package for the fast evaluation of multivariate polynomials. This package uses Julia metaprogramming features to generate a specialized function for the evaluation of the polynomial and its gradient.
@@ -36,3 +38,13 @@ julia> jacobian(f, [2.0, 3.0])
  4.0  6.0
  1.0  1.0
 ```
+
+[docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
+[docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
+[docs-stable-url]: https://juliaalgebra.github.io/StaticPolynomials.jl/stable
+[docs-latest-url]: https://juliaalgebra.github.io/StaticPolynomials.jl/latest
+
+[build-img]: https://travis-ci.org/JuliaAlgebra/StaticPolynomials.jl.svg?branch=master
+[build-url]: https://travis-ci.org/JuliaAlgebra/StaticPolynomials.jl
+[codecov-img]: https://codecov.io/gh/juliaalgebra/StaticPolynomials.jl/branch/master/graph/badge.svg
+[codecov-url]: https://codecov.io/gh/juliaalgebra/StaticPolynomials.jl
