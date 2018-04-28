@@ -77,17 +77,25 @@ function bevaluate(T, testsystem)
     @benchmarkable SP.evaluate($F, $x)
 end
 
-function bjacobian(T, testsystem)
+function static_bjacobian(T, testsystem)
     F = SP.system(TestSystems.equations(testsystem))
     n = SP.nvariables(F)
     x = SVector{n, T}(rand(T, n))
     @benchmarkable SP.jacobian($F, $x)
 end
 
+function bjacobian(T, testsystem)
+    F = SP.system(TestSystems.equations(testsystem))
+    n = SP.nvariables(F)
+    x = rand(T, n)
+    U = zeros(T, SP.npolynomials(F), n)
+    @benchmarkable SP.jacobian!($U, $F, $x)
+end
 
 const SUITE = BenchmarkGroup()
 SUITE["evaluate"] = BenchmarkGroup(["evaluate"])
 SUITE["jacobian"] = BenchmarkGroup(["jacobian"])
+SUITE["static jacobian"] = BenchmarkGroup(["static jacobian"])
 
 const all_systems = [
     :katsura5, :katsura6, :katsura7, :katsura8, :katsura9, :katsura10,
@@ -104,6 +112,7 @@ for T in [Float64, Complex{Float64}]
             sys = $(Expr(:call, system))
             SUITE["evaluate"][$(T_str)][$(string(system))] = bevaluate($T, sys)
             SUITE["jacobian"][$(T_str)][$(string(system))] = bjacobian($T, sys)
+            SUITE["static jacobian"][$(T_str)][$(string(system))] = static_bjacobian($T, sys)
         end
     end
 end
