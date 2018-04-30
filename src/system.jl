@@ -172,7 +172,7 @@ module Systems
                 $(Expr(:block,
                     (:(@inbounds $(Symbol("u_", i)) = StaticPolynomials.evaluate(system.$(fs[i]), x)) for i in 1:n)...,
                     :(SVector(
-                        $((Symbol("u_", i) for i=1:n)...)
+                        $(Expr(:tuple, (Symbol("u_", i) for i=1:n)...))
                     ))
                 ))
             end
