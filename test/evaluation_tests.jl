@@ -22,21 +22,22 @@ function sp_jacobian(equations, x)
     SP.jacobian(F, x)
 end
 
-const all_systems = [
-    :katsura5, :katsura6, :katsura7, :katsura8, :katsura9, :katsura10,
-    :chandra4, :chandra5,
-    :cyclic5, :cyclic6, :cyclic7, :cyclic8,
-    :fourbar, :rps10]
+function katsura(n)
+  @polyvar x[0:n] # This creates variables x0, x1, ...
 
-using TestSystems
+  return [
+    (sum(x[abs(l)+1]*x[abs(m-l)+1] for l=-n:n if abs(m-l)<=n) -
+    x[m+1] for m=0:n-1)...,
+    x[1] + 2sum(x[i+1] for i=1:n) - 1
+  ]
+end
 
 @testset "testsystems" begin
     for T = [Float64, Complex{Float64}]
-        for name in all_systems
-            system = eval(Expr(:call, name))
-            nvars = TestSystems.nvariables(system)
+        for n=4:12
+            nvars = n+1
+            eqs = katsura(n)
             x = SVector{nvars}(rand(T, nvars))
-            eqs = TestSystems.equations(system)
 
             @test norm(sp_evaluate(eqs, x) - mp_evaluate(eqs, x)) < 1e-14
             @test norm(sp_evaluate(eqs, Vector(x)) - mp_evaluate(eqs, x)) < 1e-14

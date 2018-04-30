@@ -8,22 +8,23 @@ Construct a Polynomial from `f`.
 """
 struct Polynomial{T, NVars, E<:SExponents}
     coefficients::Vector{T}
+    variables::SVector{NVars, Symbol}
 
-    function Polynomial{T, NVars, SExponents{E}}(coefficients::Vector{T}) where {T, NVars, E}
+    function Polynomial{T, NVars, SExponents{E}}(coefficients::Vector{T}, variables::SVector{NVars, Symbol}) where {T, NVars, E}
         @assert length(coefficients) == div(length(E), NVars) "Coefficients size does not match exponents size"
-        new(coefficients)
+        new(coefficients, variables)
     end
 end
 
-function Polynomial(coefficients::Vector{T}, nvars, exponents::E) where {T, E<:SExponents}
-    return Polynomial{T, nvars, E}(coefficients)
+function Polynomial(coefficients::Vector{T}, nvars, exponents::E, variables) where {T, E<:SExponents}
+    return Polynomial{T, nvars, E}(coefficients, variables)
 end
 
-function Polynomial(coefficients::Vector{T}, exponents::Matrix{<:Integer}) where {T}
+function Polynomial(coefficients::Vector{T}, exponents::Matrix{<:Integer}, variables=SVector((Symbol("x", i) for i=1:size(exponents, 1))...)) where {T}
     nvars = size(exponents, 1)
     @assert length(coefficients) == size(exponents, 2) "Coefficients size does not match exponents size"
     E, p = revlexicographic_cols(exponents)
-    return Polynomial(coefficients[p], nvars, SExponents(E))
+    return Polynomial(coefficients[p], nvars, SExponents(E), variables)
 end
 
 # Implementation from Base.sort adapted to also reorder an associated vector
@@ -58,7 +59,7 @@ function Polynomial(p::MP.AbstractPolynomialLike{T}, vars = MP.variables(p)) whe
             exponents[i, j] = MP.degree(term, var)
         end
     end
-    Polynomial(coefficients, exponents)
+    Polynomial(coefficients, exponents, SVector((Symbol(var) for var in vars)...))
 end
 
 """

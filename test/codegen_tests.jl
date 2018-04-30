@@ -15,14 +15,6 @@
 end
 
 @testset "evaluate_codegen low_level" begin
-    # @test SP.generate_evaluate([2 3 3]', Float64) == Expr(:block, :(c[1] * (x[1] * x[1]) * (x[2] * x[2] * x[2]) * (x[3] * x[3] * x[3])))
-    #
-    # @test SP.generate_evaluate(reshape([1 2 3], 1, 3), Float64) == Expr(:block,
-    #     :(@evalpoly x[1] zero($Float64) c[1] c[2] c[3]))
-    #
-    # @test SP.generate_evaluate(reshape([2 5], 1, 2), Float64) == Expr(:block,
-    #     :(@evalpoly x[1] zero($Float64) zero($Float64) c[1] zero($Float64) zero($Float64) c[2]))
-
     E = [ 4  4  1  3  5
           2  4  2  2  5
           0  1  2  2  2 ]

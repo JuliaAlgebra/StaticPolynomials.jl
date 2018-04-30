@@ -27,7 +27,7 @@ matrix:
 
 ## uncomment the following lines to override the default test script
 script:
- - julia -e 'Pkg.clone("https://github.com/JuliaHomotopyContinuation/TestSystems.jl.git"); Pkg.clone(pwd()); Pkg.build("StaticPolynomials"); Pkg.test("StaticPolynomials"; coverage=true)'
+ - julia -e 'Pkg.clone(pwd()); Pkg.build("StaticPolynomials"); Pkg.test("StaticPolynomials"; coverage=true)'
 after_success:
   # push coverage results to Codecov
   - julia -e 'cd(Pkg.dir("StaticPolynomials")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'

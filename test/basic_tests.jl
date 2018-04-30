@@ -37,6 +37,15 @@ end
     @test abs(SP.evaluate(g, w) - f2(x => w[1], y => w[2])) < 1e-15
 end
 
+@testset "show" begin
+    @polyvar x[0:9]
+    @test string(Polynomial(x[1])) == "x₀"
+    @test string(Polynomial(sum((-1)^i * x[i]^i for i=1:length(x)))) ==
+        "-x₀ + x₁² - x₂³ + x₃⁴ - x₄⁵ + x₅⁶ - x₆⁷ + x₇⁸ - x₈⁹ + x₉¹⁰"
+    @test string(Polynomial(2im*x[1] - x[2])) == "(0 + 2im)x₀ - x₁"
+end
+
+
 @testset "system evaluation" begin
     @polyvar x y
     f1 = x^2+y^2
