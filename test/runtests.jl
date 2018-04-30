@@ -4,7 +4,6 @@ using StaticArrays
 import DynamicPolynomials: @polyvar
 import MultivariatePolynomials
 const MP = MultivariatePolynomials
-import TestSystems
 using Compat.Test
 using Compat.LinearAlgebra
 
