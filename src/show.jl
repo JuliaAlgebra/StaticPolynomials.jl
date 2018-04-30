@@ -1,7 +1,7 @@
 function Base.show(io::IO, p::AbstractSystem{T, N, M}) where {T,N,M}
-    println("System of $N polynomials in $M variables with coefficients in $T:")
+    println(io, "System of $N polynomials in $M variables with coefficients in $T:")
     for fieldname in fieldnames(p)
-        println("\t$(getfield(p, fieldname))")
+        println(io, "\t$(getfield(p, fieldname))")
     end
 end
 
