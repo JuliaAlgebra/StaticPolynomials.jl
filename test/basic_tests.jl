@@ -34,11 +34,11 @@ end
     g = Polynomial(f2)
     w = rand(2)
 
-    @test abs(SP.evaluate(g, w) - f2(x => w[1], y => w[2])) < 1e-15
+    @test abs(SP.evaluate(g, w) - f2(x => w[1], y => w[2])) < 1e-13
 
     f2_x = MP.differentiate(2x^2+4y^2+3x*y^4+1, x)
     f2_y = MP.differentiate(2x^2+4y^2+3x*y^4+1, y)
-    @test norm(SP.gradient(g, w) - [f2_x(x => w[1], y => w[2]), f2_y(x => w[1], y => w[2])]) < 1e-15
+    @test norm(SP.gradient(g, w) - [f2_x(x => w[1], y => w[2]), f2_y(x => w[1], y => w[2])]) < 1e-13
 
     u = zeros(2)
     SP.gradient!(u, g, w)
@@ -81,7 +81,7 @@ end
     x = rand()
     z = rand(Complex{Float64})
     for k = 4:15
-        @test abs(SP.pow(x, k) - x^k) < 1e-14
-        @test abs(SP.pow(z, k) - z^k) < 1e-14
+        @test abs(SP.pow(x, k) - x^k) < 1e-13
+        @test abs(SP.pow(z, k) - z^k) < 1e-13
     end
 end
