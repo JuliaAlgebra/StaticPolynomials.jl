@@ -7,7 +7,7 @@ This assumes that E is in reverse lexicographic order.
 function generate_gradient(E, ::Type{T}) where T
     exprs = []
     values = generate_gradient!(exprs, E, T, size(E, 1), 1, true)
-    out = :($(values[1]), SVector($(values[2:end]...)))
+    out = :($(values[1]), SVector($(Expr(:tuple, values[2:end]...))))
 
     Expr(:block, exprs..., out)
 end
