@@ -79,15 +79,8 @@ function monomial_product(::Type{T}, exponent::AbstractVector, coefficient, i::U
             continue
         elseif k == i && e > 1
             pushfirst!(ops, :($e))
-            if e > 2
-                push!(ops, pow(x_(k), e - 1))
-            else
-                # e = 1
-                push!(ops, x_(k))
-            end
-        elseif e == 1
-            push!(ops, x_(k))
-        elseif e > 1
+            push!(ops, pow(x_(k), e - 1))
+        elseif e > 0
             push!(ops, pow(x_(k), e))
         end
     end

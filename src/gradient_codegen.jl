@@ -15,6 +15,8 @@ end
 function generate_gradient!(exprs, E, ::Type{T}, nvar, nterm, final=false) where T
     m, n = size(E)
 
+    # We only have one Term remaining. So we just evaluate the term and compute all
+    # partial derivatives
     if n == 1
         val, dvals = monomial_product_with_derivatives(T, E[:,1], :(c[$nterm]))
 
