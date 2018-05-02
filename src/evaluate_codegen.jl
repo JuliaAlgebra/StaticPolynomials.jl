@@ -14,7 +14,7 @@ function generate_evaluate!(exprs, E, ::Type{T}, nvar, nterm) where T
     m, n = size(E)
 
     if n == 1
-        return monomial_product(T, E[:,1], :(c[$nterm]))
+        return first(monomial_product(T, E[:,1], :(c[$nterm])))
     end
 
     if m == 1
