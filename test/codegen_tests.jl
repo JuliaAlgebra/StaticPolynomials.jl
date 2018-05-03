@@ -1,17 +1,17 @@
 @testset "monomial_product" begin
-    @test SP.monomial_product(Float64, [2, 3, 1], :(c[5])) == :(c[5] * (x[1] * x[1]) * (x[2] * x[2] * x[2]) * x[3])
-    @test SP.monomial_product(Float64, [2, 3, 1], :(c[5]), 2) == :((3 * c[5] * (x[1] * x[1]) * (x[2] * x[2])) * x[3])
+    @test SP.monomial_product(Float64, [2, 3, 1], :(c[5]))[1] == :(c[5] * (x[1] * x[1]) * (x[2] * x[2] * x[2]) * x[3])
+    @test SP.monomial_product(Float64, [2, 3, 1], :(c[5]), 2)[1] == :((3 * c[5] * (x[1] * x[1]) * (x[2] * x[2])) * x[3])
 
     # optimizations
     # no ^1
-    @test SP.monomial_product(Float64, [1, 3, 1], :(c[5])) == :(c[5] * x[1] * (x[2] * x[2] * x[2]) * x[3])
+    @test SP.monomial_product(Float64, [1, 3, 1], :(c[5]))[1] == :(c[5] * x[1] * (x[2] * x[2] * x[2]) * x[3])
     # omit ^0
-    @test SP.monomial_product(Float64, [1, 0, 1], :(c[5])) == :(c[5] * x[1] * x[3])
-    @test SP.monomial_product(Float64, [0, 0, 0], :(c[5])) == :(c[5])
+    @test SP.monomial_product(Float64, [1, 0, 1], :(c[5]))[1] == :(c[5] * x[1] * x[3])
+    @test SP.monomial_product(Float64, [0, 0, 0], :(c[5]))[1] == :(c[5])
     # omit 1 * and ^0
-    @test SP.monomial_product(Float64, [1, 3, 2], :(c[5]), 1) == :(c[5] * (x[2] * x[2] * x[2]) * (x[3] * x[3]))
+    @test SP.monomial_product(Float64, [1, 3, 2], :(c[5]), 1)[1] == :(c[5] * (x[2] * x[2] * x[2]) * (x[3] * x[3]))
     # omit ^1 in derivative
-    @test SP.monomial_product(Float64, [2, 2, 2], :(c[5]), 2) == :((2 * c[5] * (x[1] * x[1]) * x[2]) * (x[3] * x[3]))
+    @test SP.monomial_product(Float64, [2, 2, 2], :(c[5]), 2)[1] == :((2 * c[5] * (x[1] * x[1]) * x[2]) * (x[3] * x[3]))
 end
 
 @testset "evaluate_codegen low_level" begin
