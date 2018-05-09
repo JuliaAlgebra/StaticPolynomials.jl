@@ -9,7 +9,7 @@
 [StaticPolynomials.jl](https://github.com/saschatimme/FixedPolynomials.jl) is a library for
 *fast* evaluation of multivariate polynomials.
 
-Let `f` be a multivariate polynomial with supprt `A`.
+Let `f` be a multivariate polynomial with support `A`.
 This package then uses Julia metaprogramming capabilities (`@generated` in particular)
 to generate specialized functions for the evaluation of `f` and its gradient.
 In order to achieve this the support is encoded in the type of `f` and a new function will be compiled for
