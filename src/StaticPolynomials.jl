@@ -9,7 +9,7 @@ module StaticPolynomials
     using Compat
     using Compat.LinearAlgebra
 
-    if VERSION <= v"0.6.2"
+    if VERSION <= v"0.6.3"
         import Base: gradient
     else
         import LinearAlgebra: gradient
