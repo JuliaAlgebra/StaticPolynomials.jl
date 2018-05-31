@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Introduction · StaticPolynomials.jl</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="assets/documenter.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link href="assets/documenter.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>StaticPolynomials.jl</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="search.html"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li class="current"><a class="toctext" href="index.html">Introduction</a><ul class="internal"><li><a class="toctext" href="#Tutorial-1">Tutorial</a></li></ul></li><li><a class="toctext" href="reference.html">Reference</a></li></ul></nav><article id="docs"><header><nav><ul><li><a href="index.html">Introduction</a></li></ul><a class="edit-page" href="https://github.com/JuliaAlgebra/StaticPolynomials.jl/blob/master/docs/src/index.md"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Introduction</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="Introduction-1" href="#Introduction-1">Introduction</a></h1><p><a href="https://github.com/saschatimme/FixedPolynomials.jl">StaticPolynomials.jl</a> is a library for <em>fast</em> evaluation of multivariate polynomials.</p><p>Let <span>$f$</span> be a multivariate polynomial with support <span>$A\subset \mathbb{N}^n$</span>. This package then uses Julia metaprogramming capabilities (<code>@generated</code> in particular) to generate specialized functions for the evaluation of <span>$f$</span> and its gradient. In order to achieve this the support is encoded in the type of <span>$f$</span> and a new function will be compiled for each newly encountered support. Therefore this is not suitable if you only evaluate <span>$f$</span> a couple of times.</p><p>Since the polynomials in this package are optimised for fast evaluation they are not suited for construction of polynomials. It is recommended to construct a polynomial with an implementation of <a href="https://github.com/blegat/MultivariatePolynomials.jl">MultivariatePolynomials.jl</a>, e.g. <a href="https://github.com/blegat/DynamicPolynomials.jl">DynamicPolynomials.jl</a>, and to convert it then into a <code>StaticPolynomials.Polynomial</code> for further computations.</p><h2><a class="nav-anchor" id="Tutorial-1" href="#Tutorial-1">Tutorial</a></h2><pre><code class="language-julia">import DynamicPolynomials: @polyvar
+using StaticPolynomials: gradient
+
+@polyvar x y
+
+julia&gt; f = Polynomial(x^2+3y^2*x+1) # the support of f is encoded in the `Polynomial` type.
+StaticPolynomials.Polynomial{Int64,2,SExponents{4103c6525e885f8b}}()
+
+julia&gt; evaluate(f, [2.0, 3.0])
+59.0
+julia&gt; gradient(f, [2.0, 3.0])
+2-element Array{Float64,1}:
+ 31.0
+ 36.0</code></pre><p>We also support systems of polynomials.</p><pre><code class="language-julia">julia&gt; F = system([x^2+y^2+1, x + y - 5])
+StaticPolynomials.Systems.System2{Int64,2,SExponents{932bae602683cacb},SExponents{44c61f91039334d1}}()
+julia&gt; evaluate(F, [2.0, 3.0])
+2-element Array{Float64,1}:
+ 14.0
+  0.0
+julia&gt; jacobian(f, [2.0, 3.0])
+2×2 Array{Float64,2}:
+ 4.0  6.0
+ 1.0  1.0</code></pre><footer><hr/><a class="next" href="reference.html"><span class="direction">Next</span><span class="title">Reference</span></a></footer></article></body></html>
