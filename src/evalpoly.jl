@@ -51,7 +51,7 @@ julia> @evalpoly(2, 1, 1, 1)
 ```
 """
 macro evalpoly_derivative(z, p...)
-    if VERSION <= v"0.6.2"
+    if VERSION <= v"0.6.9"
         R = Expr(:macrocall, Symbol("@horner_deriv"), :tt, map(esc, p)...)
         C = Expr(:macrocall, Symbol("@goertzel_deriv"), :tt, map(esc, p)...)
     else

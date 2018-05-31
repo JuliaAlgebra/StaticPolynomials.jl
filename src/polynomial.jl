@@ -38,7 +38,7 @@ function revlexicographic_cols(A::AbstractMatrix; kws...)
     inds = Compat.axes(A,2)
     T = Base.Sort.slicetypeof(A, :, inds)
     cols = map(i -> (@view A[end:-1:1, i]), inds)
-    if VERSION <= v"0.6.2"
+    if VERSION <= v"0.6.9"
         p = sortperm(cols; kws..., order=Base.Sort.Lexicographic)
     else
         p = sortperm(cols; kws...)
