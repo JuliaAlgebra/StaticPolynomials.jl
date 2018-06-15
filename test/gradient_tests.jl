@@ -19,5 +19,5 @@
       g = Polynomial(f)
       x = rand(4)
       vars = [a, b, t, z]
-      map(v -> (MP.differentiate(f, v))(vars=>x), vars) ≈ gradient(g, x)
+      @test map(v -> (MP.differentiate(f, v))(vars=>x), vars) ≈ gradient(g, x)
 end
