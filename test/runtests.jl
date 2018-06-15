@@ -4,6 +4,7 @@ using StaticArrays
 import DynamicPolynomials: @polyvar
 import MultivariatePolynomials
 const MP = MultivariatePolynomials
+using Compat
 using Compat.Test
 
 include("codegen_tests.jl")

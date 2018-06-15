@@ -6,6 +6,9 @@ This assumes that E is in reverse lexicographic order.
 """
 function generate_gradient(E, ::Type{T}) where T
     exprs = []
+    # dvals is a list of tuples (s, iszero) where s is a symbol or expression
+    # representing the partial derivative and iszero a boolean flag
+    # indicating whether s is zero.
     val, dvals = partial_derivatives!(exprs, E, T, size(E, 1), 1)
     out = :($(val), SVector($(Expr(:tuple, map(first, dvals)...))))
 
@@ -42,6 +45,7 @@ function partial_derivatives!(exprs, E, ::Type{T}, nvar, nterm) where T
     degrees, submatrices = degrees_submatrices(E)
     values = []
     dvalues = []
+
     for (k, E_d) in enumerate(submatrices)
         val, dvals = partial_derivatives!(exprs, E_d, T, nvar - 1, nterm)
         push!(values, val)
@@ -62,6 +66,7 @@ function partial_derivatives!(exprs, E, ::Type{T}, nvar, nterm) where T
                 pushfirst!(coeffs_k, dval)
             end
         end
+
         degrees_k = degrees[1:length(coeffs_k)]
         # we do not need assign a new variable and call evalpoly
         # if we just have a degree 0 polynomial with already computed coefficient
@@ -75,7 +80,8 @@ function partial_derivatives!(exprs, E, ::Type{T}, nvar, nterm) where T
             push!(dvals, (:(zero($T)), true))
         end
     end
-    push!(dvals, (derivative_val, length(degrees) == 1))
+    derivative_val_iszero = isempty(degrees) || (length(degrees) == 1 && degrees[1] == 0)
+    push!(dvals, (derivative_val, derivative_val_iszero))
 
     val, dvals
 end
