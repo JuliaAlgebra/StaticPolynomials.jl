@@ -6,6 +6,7 @@ import MultivariatePolynomials
 const MP = MultivariatePolynomials
 using Compat
 using Compat.Test
+using Compat.LinearAlgebra
 
 include("codegen_tests.jl")
 include("basic_tests.jl")
