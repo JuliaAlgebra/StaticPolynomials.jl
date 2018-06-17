@@ -6,18 +6,18 @@ export Polynomial, coefficients, exponents, nvariables, coefficienttype
 
 Construct a Polynomial from `f`.
 """
-struct Polynomial{T, NVars, E<:SExponents}
+struct Polynomial{T, NVars, SE}
     coefficients::Vector{T}
     variables::SVector{NVars, Symbol}
 
-    function Polynomial{T, NVars, SExponents{E}}(coefficients::Vector{T}, variables::SVector{NVars, Symbol}) where {T, NVars, E}
-        @assert length(coefficients) == div(length(E), NVars) "Coefficients size does not match exponents size"
+    function Polynomial{T, NVars, SE}(coefficients::Vector{T}, variables::SVector{NVars, Symbol}) where {T, NVars, SE}
+        @assert length(coefficients) == div(length(SE), NVars) "Coefficients size does not match exponents size"
         new(coefficients, variables)
     end
 end
 
-function Polynomial(coefficients::Vector{T}, nvars, exponents::E, variables) where {T, E<:SExponents}
-    return Polynomial{T, nvars, E}(coefficients, variables)
+function Polynomial(coefficients::Vector{T}, nvars, exponents::SExponents, variables) where {T}
+    return Polynomial{T, nvars, exponents}(coefficients, variables)
 end
 
 function Polynomial(coefficients::Vector{T}, exponents::Matrix{<:Integer}, variables=SVector((Symbol("x", i) for i=1:size(exponents, 1))...)) where {T}
@@ -75,9 +75,11 @@ coefficients(f::Polynomial) = f.coefficients
 Return the exponents of `f` as an matrix where each column represents
 the exponents of a monomial.
 """
-function exponents(::Polynomial{T, NVars, E}) where {T, NVars, E<:SExponents}
-    exponents(E, NVars)
+function exponents(::Polynomial{T, NVars, E}) where {T, NVars, E}
+    exponents(E)
 end
+
+sexponents(::Polynomial{T, NVars, E}) where {T, NVars, E} = E
 
 """
     nvariables(f::Polynomial)
@@ -94,6 +96,6 @@ Return the type of the coefficients of `f`.
 coefficienttype(::Polynomial{T, NVars}) where {T, NVars} = T
 
 
-function Base.:(==)(f::Polynomial{T, NVars, E}, g::Polynomial{T, NVars, E}) where {T, NVars, E<:SExponents}
-    coefficients(f) == coefficients(g)
+function Base.:(==)(f::Polynomial{T, NVars, E1}, g::Polynomial{T, NVars, E2}) where {T, NVars, E1, E2}
+    E1 == E2 && coefficients(f) == coefficients(g)
 end

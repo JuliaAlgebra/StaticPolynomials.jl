@@ -10,12 +10,12 @@ Evaluate the polynomial `f` at `x`.
 end
 (f::Polynomial)(x::AbstractVector) = evaluate(f, x)
 
-function evaluate_impl(f::Type{Polynomial{T, NVars, E}}) where {T, NVars, E<:SExponents}
+function evaluate_impl(f::Type{Polynomial{T, NVars, E}}) where {T, NVars, E}
     quote
         @boundscheck length(x) ≥ NVars
         c = coefficients(f)
         @inbounds out = begin
-            $(generate_evaluate(exponents(E, NVars), T))
+            $(generate_evaluate(exponents(E), T))
         end
         out
     end
@@ -76,12 +76,12 @@ end
     _val_gradient_impl(f)
 end
 
-function _val_gradient_impl(f::Type{Polynomial{T, NVars, E}}) where {T, NVars, E<:SExponents}
+function _val_gradient_impl(f::Type{Polynomial{T, NVars, E}}) where {T, NVars, E}
     quote
         @boundscheck length(x) ≥ NVars
         c = coefficients(f)
         @inbounds val, grad = begin
-            $(generate_gradient(exponents(E, NVars), T))
+            $(generate_gradient(exponents(E), T))
         end
         val, grad
     end

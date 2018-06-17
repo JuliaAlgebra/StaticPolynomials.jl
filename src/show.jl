@@ -9,7 +9,7 @@ function Base.show(io::IO, p::Polynomial{T, N, E}) where {T,N,E}
     first = true
     cfs = coefficients(p)
 
-    exps = exponents(E, N)
+    exps = exponents(E)
     NVars, NTerms = size(exps)
 
     for j=1:NTerms
