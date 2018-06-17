@@ -151,7 +151,7 @@ module Systems
         fs = [Symbol("f", i) for i=1:n]
         Es = [Symbol("E", i) for i=1:n]
         fields = [:($(fs[i])::Polynomial{T, N, $(Symbol("E", i))}) for i=1:n]
-        types = [:($(Es[i])<:SExponents) for i=1:n]
+        types = [:($(Es[i])) for i=1:n]
         name = Symbol("System", n)
         quote
             struct $(name){T, N, $(types...)} <: AbstractSystem{T, $n, N}
