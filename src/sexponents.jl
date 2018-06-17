@@ -30,7 +30,8 @@ end
 exponents(::S, nvars) where {S<:SExponents} = exponents(S, nvars)
 
 function Base.show(io::IO, ::Type{SExponents{E}}) where {E}
-    exps_hash = num2hex(hash(E))
+    n = hash(E)
+    exps_hash = string(n, base=16, pad=sizeof(n) * 2)
     print(io, "SExponents{$(exps_hash)}")
 end
 Base.show(io::IO, S::SExponents) = print(io, typeof(S), "()")
