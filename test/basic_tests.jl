@@ -1,7 +1,7 @@
 @testset "constructors" begin
     A = round.(Int, max.(0.0, 5 * rand(6, 10) .- 1))
     f = Polynomial(rand(10), A)
-    @test typeof(f) <: Polynomial{Float64, 6, <:SExponents}
+    @test typeof(f) <: Polynomial{Float64, 6}
 
     @test_throws AssertionError Polynomial(rand(9), A)
 

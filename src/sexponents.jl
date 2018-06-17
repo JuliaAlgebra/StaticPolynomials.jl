@@ -1,37 +1,40 @@
 export SExponents
 
-struct SExponents{E}
-    function SExponents{E}() where { E}
-        @assert typeof(E) <: NTuple{N, Int} where N "Exponents type invalid"
-        new()
-    end
+struct SExponents{N}
+    exponents::NTuple{N, UInt8}
+    size::Tuple{Int,Int} # nvars, nterms
 end
 
 function SExponents(exponents::Matrix{<:Integer})
-    # NVars = size(exponents, 1)
-    E = ntuple(i -> convert(Int, exponents[i]), length(exponents))
+    E = ntuple(i -> convert(UInt8, exponents[i]), length(exponents))
 
-    return SExponents{E}()
+    return SExponents(E, size(exponents))
 end
+
+Base.isbits(::Type{<:SExponents}) = true
+Base.length(::SExponents{N}) where N = N
+function Base.:(==)(f::SExponents{N}, g::SExponents{N}) where {N}
+    f.exponents == g.exponents && f.size == g.size
+end
+Base.hash(f::SExponents, h) = hash(f.exponents, hash(f.size, h))
+
 
 """
     exponents(::SExponents)
 
 Converts exponents stored in a `SExponents` to a matrix.
 """
-function exponents(::Type{SExponents{E}}, nvars) where {E}
-    nterms = div(length(E), nvars)
+function exponents(SE::SExponents)
+    nvars, nterms = SE.size
     exps = fill(0, nvars, nterms)
     for k=1:nvars*nterms
-        exps[k] = E[k]
+        exps[k] = SE.exponents[k]
     end
     exps
 end
-exponents(::S, nvars) where {S<:SExponents} = exponents(S, nvars)
 
-function Base.show(io::IO, ::Type{SExponents{E}}) where {E}
-    n = hash(E)
+function Base.show(io::IO, SE::SExponents{N}) where {N}
+    n = hash(SE.exponents)
     exps_hash = string(n, base=16, pad=sizeof(n) * 2)
-    print(io, "SExponents{$(exps_hash)}")
+    print(io, "SExponents{$N}($(exps_hash))")
 end
-Base.show(io::IO, S::SExponents) = print(io, typeof(S), "()")
