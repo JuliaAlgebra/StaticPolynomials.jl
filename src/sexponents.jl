@@ -33,8 +33,14 @@ function exponents(SE::SExponents)
     exps
 end
 
-function Base.show(io::IO, SE::SExponents{N}) where {N}
-    n = hash(SE.exponents)
-    exps_hash = string(n, base=16, pad=sizeof(n) * 2)
-    print(io, "SExponents{$N}($(exps_hash))")
+@static if VERSION ≥ v"0.7-"
+    function Base.show(io::IO, SE::SExponents{N}) where {N}
+        n = hash(SE.exponents)
+        exps_hash = string(n, base=16, pad=sizeof(n) * 2)
+        print(io, "SExponents{$N}($(exps_hash))")
+    end
+else
+    function Base.show(io::IO, SE::SExponents{N}) where {N}
+        print(io, "SExponents{$N}($(num2hex(hash(SE.exponents))))")
+    end
 end
