@@ -1,9 +1,9 @@
 # StaticPolynomials
 
-| **Documentation** | **Build Status** |
-|:-----------------:|:----------------:|
-| [![][docs-stable-img]][docs-stable-url] | [![Build Status][build-img]][build-url] |
-| [![][docs-latest-img]][docs-latest-url] | [![Codecov branch][codecov-img]][codecov-url] |
+| **Documentation** | **Build Status** | **References to cite** |
+|:-----------------:|:----------------:|:----------------------:|
+| [![][docs-stable-img]][docs-stable-url] | [![Build Status][build-img]][build-url] | [![DOI](https://zenodo.org/badge/123788793.svg)](https://zenodo.org/badge/latestdoi/123788793) |
+| [![][docs-latest-img]][docs-latest-url] | [![Codecov branch][codecov-img]][codecov-url] |  |
 
 
 [StaticPolynomials.jl](https://github.com/saschatimme/FixedPolynomials.jl) is a library for
