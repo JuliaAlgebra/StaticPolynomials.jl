@@ -4,7 +4,7 @@ module StaticPolynomials
 
     import MultivariatePolynomials
     const MP = MultivariatePolynomials
-    import StaticArrays: SVector, SMatrix
+    import StaticArrays: SVector, MVector, SMatrix
 
     using Compat
     using Compat.LinearAlgebra

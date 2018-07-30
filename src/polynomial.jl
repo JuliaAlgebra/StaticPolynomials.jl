@@ -8,7 +8,7 @@ Construct a Polynomial from `f`.
 """
 struct Polynomial{T, NVars, SE}
     coefficients::Vector{T}
-    variables::SVector{NVars, Symbol}
+    variables::MVector{NVars, Symbol}
 
     function Polynomial{T, NVars, SE}(coefficients::Vector{T}, variables::SVector{NVars, Symbol}) where {T, NVars, SE}
         @assert length(coefficients) == div(length(SE), NVars) "Coefficients size does not match exponents size"
