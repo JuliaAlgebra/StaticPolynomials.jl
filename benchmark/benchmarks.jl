@@ -31,9 +31,10 @@
 #     run(`open $url`)
 # end
 
-## Benchmark script
-##
-# using GitHub, JSON, PkgBenchmark
+# # Benchmark script
+# #
+# using GitHub, JSON
+# using PkgBenchmark
 #
 # cfg = BenchmarkConfig(juliacmd = `julia -O3`);
 # results = benchmarkpkg("StaticPolynomials", cfg);
@@ -106,15 +107,12 @@ systems = [
     (fourbar(), "fourbar"), (rps10(), "rps10")]
 
 for T in [Float64, Complex{Float64}]
-    T_str = string(T)
-    SUITE["evaluate"][T_str] = BenchmarkGroup()
-    SUITE["jacobian"][T_str] = BenchmarkGroup()
-    SUITE["static jacobian"][T_str] = BenchmarkGroup()
-    @eval begin
-        for (system, name) in systems
-            SUITE["evaluate"][$(T_str)][name] = bevaluate($T, system)
-            SUITE["jacobian"][$(T_str)][name] = bjacobian($T, system)
-            SUITE["static jacobian"][$(T_str)][name] = static_bjacobian($T, system)
-        end
+    SUITE["evaluate"][string(T)] = BenchmarkGroup()
+    SUITE["jacobian"][string(T)] = BenchmarkGroup()
+    SUITE["static jacobian"][string(T)] = BenchmarkGroup()
+    for (system, name) in systems
+        SUITE["evaluate"][string(T)][name] = bevaluate(T, system)
+        SUITE["jacobian"][string(T)][name] = bjacobian(T, system)
+        SUITE["static jacobian"][string(T)][name] = static_bjacobian(T, system)
     end
 end
