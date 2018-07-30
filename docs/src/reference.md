@@ -31,4 +31,5 @@ jacobian
 jacobian!
 evaluate_and_jacobian
 evaluate_and_jacobian!
+foreach(f::Function, ::AbstractSystem)
 ```

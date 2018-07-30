@@ -103,3 +103,14 @@ end
     x2 = evaluate(G, w)
     @test x2 ≈ (-2, 3) .* x1
 end
+
+@testset "foreach" begin
+    @polyvar x y
+    g = [Polynomial(x^2+y^2), Polynomial(2x^2+4y^2+3x*y^4+1)]
+    G = system(g...)
+    i = 1
+    foreach(G) do gi
+        @test exponents(gi) == exponents(g[i])
+        i += 1
+    end
+end

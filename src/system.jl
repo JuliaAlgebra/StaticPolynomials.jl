@@ -139,6 +139,13 @@ have length `M`.
 """
 scale_coefficients!(f::AbstractSystem, λ::AbstractVector) = Systems._scale_coefficients!(f, λ)
 
+"""
+    foreach(f, F::AbstractSystem)
+
+Iterate over the polynomials of `F` and apply `f` to each polynomial.
+"""
+Base.foreach(f::F, S::AbstractSystem) where {F<:Function} = Systems._foreach(f, S)
+
 # We create a nested module to not clutter the namespace
 module Systems
 
@@ -252,6 +259,13 @@ module Systems
             function _scale_coefficients!(S::$(name){T, N}, λ) where {T, N}
                 $(Expr(:block,
                     (:(StaticPolynomials.scale_coefficients!(S.$(fs[i]), λ[$i])) for i in 1:n)...
+                ))
+                nothing
+            end
+
+            function _foreach(f::F, S::$(name){T, N}) where {T, N, F<:Function}
+                $(Expr(:block,
+                    (:(f(S.$(fs[i]))) for i in 1:n)...
                 ))
                 nothing
             end
