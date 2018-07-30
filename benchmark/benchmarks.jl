@@ -68,24 +68,24 @@ using BenchmarkTools
 import StaticPolynomials
 const SP = StaticPolynomials
 using StaticArrays
-using TestSystems
+using PolynomialTestSystems
 
 function bevaluate(T, testsystem)
-    F = SP.system(TestSystems.equations(testsystem))
+    F = SP.system(PolynomialTestSystems.equations(testsystem))
     n = SP.nvariables(F)
     x = SVector{n, T}(rand(T, n))
     @benchmarkable SP.evaluate($F, $x)
 end
 
 function static_bjacobian(T, testsystem)
-    F = SP.system(TestSystems.equations(testsystem))
+    F = SP.system(PolynomialTestSystems.equations(testsystem))
     n = SP.nvariables(F)
     x = SVector{n, T}(rand(T, n))
     @benchmarkable SP.jacobian($F, $x)
 end
 
 function bjacobian(T, testsystem)
-    F = SP.system(TestSystems.equations(testsystem))
+    F = SP.system(PolynomialTestSystems.equations(testsystem))
     n = SP.nvariables(F)
     x = rand(T, n)
     U = zeros(T, SP.npolynomials(F), n)
@@ -97,23 +97,24 @@ SUITE["evaluate"] = BenchmarkGroup(["evaluate"])
 SUITE["jacobian"] = BenchmarkGroup(["jacobian"])
 SUITE["static jacobian"] = BenchmarkGroup(["static jacobian"])
 
-const all_systems = [
-    :katsura5, :katsura6, :katsura7, :katsura8, :katsura9, :katsura10,
-    :chandra4, :chandra5,
-    :cyclic5, :cyclic6, :cyclic7, :cyclic8,
-    :fourbar, :rps10]
+systems = [
+    (katsura(5), "katsura5"), (katsura(6), "katsura(6)"),
+    (katsura(7), "katsura7"), (katsura(8), "katsura8"),
+    (katsura(9), "katsura9"), (katsura(10), "kastura10"),
+    (chandra(4), "chandra4"), (chandra(8), "chandra8"),
+    (cyclic(6), "cyclic6"), (cyclic(7), "cyclic7"), (cyclic(9), "cyclic9"),
+    (fourbar(), "fourbar"), (rps10(), "rps10")]
 
 for T in [Float64, Complex{Float64}]
     T_str = string(T)
     SUITE["evaluate"][T_str] = BenchmarkGroup()
     SUITE["jacobian"][T_str] = BenchmarkGroup()
     SUITE["static jacobian"][T_str] = BenchmarkGroup()
-    for system in all_systems
-        @eval begin
-            sys = $(Expr(:call, system))
-            SUITE["evaluate"][$(T_str)][$(string(system))] = bevaluate($T, sys)
-            SUITE["jacobian"][$(T_str)][$(string(system))] = bjacobian($T, sys)
-            SUITE["static jacobian"][$(T_str)][$(string(system))] = static_bjacobian($T, sys)
+    @eval begin
+        for (system, name) in systems
+            SUITE["evaluate"][$(T_str)][name] = bevaluate($T, system)
+            SUITE["jacobian"][$(T_str)][name] = bjacobian($T, system)
+            SUITE["static jacobian"][$(T_str)][name] = static_bjacobian($T, system)
         end
     end
 end
