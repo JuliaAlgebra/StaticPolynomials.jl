@@ -45,7 +45,15 @@ var documenterSearchIndex = {"docs": [
     "page": "Reference",
     "title": "StaticPolynomials.Polynomial",
     "category": "type",
-    "text": "Polynomial(f::MP.AbstractPolynomial, [variables])\n\nConstruct a Polynomial from f.\n\n\n\n"
+    "text": "Polynomial{T, NVars, SE<:SExponents}\n\nA Polynomial with coefficents in T in NVars variables and exponents of type SE.\n\nPolynomial(f::MP.AbstractPolynomial, [variables])\n\nConstruct a Polynomial from f.\n\n\n\n"
+},
+
+{
+    "location": "reference.html#StaticPolynomials.SExponents",
+    "page": "Reference",
+    "title": "StaticPolynomials.SExponents",
+    "category": "type",
+    "text": "SExponents{N}\n\nStore the exponents of the terms of a polynomial (the support) with N terms as an type. This results in an unique type for each possible support.\n\n\n\n"
 },
 
 {
@@ -78,6 +86,14 @@ var documenterSearchIndex = {"docs": [
     "title": "StaticPolynomials.coefficienttype",
     "category": "method",
     "text": "coefficienttype(f::Polynomial)\n\nReturn the type of the coefficients of f.\n\n\n\ncoefficienttype(F::AbstractSystem)\n\nReturn the type of the coefficients of the polynomials of F.\n\n\n\n"
+},
+
+{
+    "location": "reference.html#StaticPolynomials.scale_coefficients!-Tuple{StaticPolynomials.Polynomial,Any}",
+    "page": "Reference",
+    "title": "StaticPolynomials.scale_coefficients!",
+    "category": "method",
+    "text": "scale_coefficients!(f, λ)\n\nScale the coefficients of f by the factor λ.\n\n\n\n"
 },
 
 {
@@ -125,7 +141,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Reference",
     "title": "Polynomial",
     "category": "section",
-    "text": "Polynomial\ncoefficients\nexponents\nnvariables(::Polynomial)\ncoefficienttype(::Polynomial)\nevaluate(::Polynomial, ::AbstractVector)\ngradient(::Polynomial, ::AbstractVector)\ngradient!(::AbstractVector, ::Polynomial, ::AbstractVector)\nevaluate_and_gradient\nevaluate_and_gradient!"
+    "text": "Polynomial\nSExponents\ncoefficients\nexponents\nnvariables(::Polynomial)\ncoefficienttype(::Polynomial)\nscale_coefficients!(::Polynomial, λ)\nevaluate(::Polynomial, ::AbstractVector)\ngradient(::Polynomial, ::AbstractVector)\ngradient!(::AbstractVector, ::Polynomial, ::AbstractVector)\nevaluate_and_gradient\nevaluate_and_gradient!"
 },
 
 {
@@ -145,27 +161,35 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "reference.html#StaticPolynomials.nvariables",
+    "location": "reference.html#StaticPolynomials.nvariables-Tuple{StaticPolynomials.AbstractSystem}",
     "page": "Reference",
     "title": "StaticPolynomials.nvariables",
-    "category": "function",
+    "category": "method",
     "text": "nvariables(f::Polynomial)\n\nReturn the number of variables f.\n\n\n\nnvariables(F::AbstractSystem)\n\nThe number of variables of the system F.\n\n\n\n"
 },
 
 {
-    "location": "reference.html#StaticPolynomials.npolynomials",
+    "location": "reference.html#StaticPolynomials.npolynomials-Tuple{StaticPolynomials.AbstractSystem}",
     "page": "Reference",
     "title": "StaticPolynomials.npolynomials",
-    "category": "function",
+    "category": "method",
     "text": "npolynomials(F::AbstractSystem)\n\nThe number of polynomials of the system F.\n\n\n\n"
 },
 
 {
-    "location": "reference.html#StaticPolynomials.coefficienttype",
+    "location": "reference.html#StaticPolynomials.coefficienttype-Tuple{StaticPolynomials.AbstractSystem}",
     "page": "Reference",
     "title": "StaticPolynomials.coefficienttype",
-    "category": "function",
+    "category": "method",
     "text": "coefficienttype(f::Polynomial)\n\nReturn the type of the coefficients of f.\n\n\n\ncoefficienttype(F::AbstractSystem)\n\nReturn the type of the coefficients of the polynomials of F.\n\n\n\n"
+},
+
+{
+    "location": "reference.html#StaticPolynomials.scale_coefficients!-Tuple{StaticPolynomials.AbstractSystem,AbstractArray{T,1} where T}",
+    "page": "Reference",
+    "title": "StaticPolynomials.scale_coefficients!",
+    "category": "method",
+    "text": "scale_coefficients!(F::AbstractSystem{T, M}, λ::AbstractVector)\n\nScale the coefficients of the polynomials fᵢ of F by the factor λᵢ. λ needs to have have length M.\n\n\n\n"
 },
 
 {
@@ -217,11 +241,19 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "reference.html#Base.foreach-Tuple{Function,StaticPolynomials.AbstractSystem}",
+    "page": "Reference",
+    "title": "Base.foreach",
+    "category": "method",
+    "text": "foreach(f, F::AbstractSystem)\n\nIterate over the polynomials of F and apply f to each polynomial.\n\n\n\n"
+},
+
+{
     "location": "reference.html#Systems-of-Polynomials-1",
     "page": "Reference",
     "title": "Systems of Polynomials",
     "category": "section",
-    "text": "AbstractSystem\nsystem\nnvariables\nnpolynomials\ncoefficienttype\nevaluate(::AbstractSystem, ::AbstractVector)\nevaluate!(::AbstractVector, ::AbstractSystem, ::AbstractVector)\njacobian\njacobian!\nevaluate_and_jacobian\nevaluate_and_jacobian!"
+    "text": "AbstractSystem\nsystem\nnvariables(::AbstractSystem)\nnpolynomials(::AbstractSystem)\ncoefficienttype(::AbstractSystem)\nscale_coefficients!(::AbstractSystem, ::AbstractVector)\nevaluate(::AbstractSystem, ::AbstractVector)\nevaluate!(::AbstractVector, ::AbstractSystem, ::AbstractVector)\njacobian\njacobian!\nevaluate_and_jacobian\nevaluate_and_jacobian!\nforeach(f::Function, ::AbstractSystem)"
 },
 
 ]}
