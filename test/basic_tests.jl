@@ -86,3 +86,20 @@ end
         @test abs(SP.pow(z, k) - z^k) < 1e-13
     end
 end
+
+
+@testset "scale coefficients" begin
+    @polyvar x y
+    f = Polynomial(x^2+y^2)
+    scale_coefficients!(f, 2)
+    coefficients(f) == [2, 2]
+
+    g1 = Polynomial(x^2+y^2)
+    g2 = Polynomial(2x^2+4y^2+3x*y^4+1)
+    G = system(g1, g2)
+    w = rand(2)
+    x1 = evaluate(G, w)
+    scale_coefficients!(G, [-2, 3])
+    x2 = evaluate(G, w)
+    @test x2 ≈ (-2, 3) .* x1
+end
