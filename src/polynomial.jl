@@ -1,7 +1,11 @@
-export Polynomial, coefficients, exponents, nvariables, coefficienttype
+export Polynomial, coefficients, exponents, nvariables, coefficienttype, scale_coefficients!
 
 
 """
+    Polynomial{T, NVars, SE<:SExponents}
+
+A Polynomial with coefficents in `T` in `NVars` variables and exponents of type `SE`.
+
     Polynomial(f::MP.AbstractPolynomial, [variables])
 
 Construct a Polynomial from `f`.
@@ -98,3 +102,11 @@ coefficienttype(::Polynomial{T, NVars}) where {T, NVars} = T
 function Base.:(==)(f::Polynomial{T, NVars, E1}, g::Polynomial{T, NVars, E2}) where {T, NVars, E1, E2}
     E1 == E2 && coefficients(f) == coefficients(g)
 end
+
+
+"""
+    scale_coefficients!(f, λ)
+
+Scale the coefficients of `f` by the factor `λ`.
+"""
+scale_coefficients!(f::Polynomial, λ) = Compat.rmul!(f.coefficients, λ)
