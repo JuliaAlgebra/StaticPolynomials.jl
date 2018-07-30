@@ -109,4 +109,4 @@ end
 
 Scale the coefficients of `f` by the factor `λ`.
 """
-scale_coefficients!(f::Polynomial, λ) = scale!(f.coefficients, λ)
+scale_coefficients!(f::Polynomial, λ) = rmul!(f.coefficients, λ)
