@@ -5,16 +5,10 @@ module StaticPolynomials
     import MultivariatePolynomials
     const MP = MultivariatePolynomials
     import StaticArrays: SVector, MVector, SMatrix
-
-    using Compat
-    using Compat.LinearAlgebra
-
-    if VERSION <= v"0.6.9"
-        import Base: gradient
-    else
+    import LinearAlgebra
+    if VERSION < v"1.0-"
         import LinearAlgebra: gradient
     end
-
 
     include("helpers.jl")
     include("sexponents.jl")
