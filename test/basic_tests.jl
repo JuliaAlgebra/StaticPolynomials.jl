@@ -42,12 +42,12 @@ end
 
     u = zeros(2)
     SP.gradient!(u, g, w)
-    @test u .≈ SP.gradient(g, w)
+    @test u ≈ SP.gradient(g, w)
 
     @test all(SP.evaluate_and_gradient(g, w) .≈ (g(w), u))
 
     @test all(SP.evaluate_and_gradient!(u, g, w) .≈ g(w))
-    @test u .≈ SP.gradient(g, w)
+    @test u ≈ SP.gradient(g, w)
 end
 
 @testset "show" begin
@@ -72,12 +72,12 @@ end
     G = system(g1, g2)
 
     w = rand(2)
-    @test [evaluate(g1, w), evaluate(g2, w)] == evaluate(G, w)
-    @test [g1(w), g2(w)] .≈ evaluate(G, w)
+    @test [evaluate(g1, w), evaluate(g2, w)] ≈ evaluate(G, w)
+    @test [g1(w), g2(w)] ≈ evaluate(G, w)
 
     w = SVector{2}(w)
     @test evaluate(G, w) isa SVector{2}
-    @test [evaluate(g1, w), evaluate(g2, w)] .≈ evaluate(G, w)
+    @test [evaluate(g1, w), evaluate(g2, w)] ≈ evaluate(G, w)
 end
 
 @testset "helpers" begin
