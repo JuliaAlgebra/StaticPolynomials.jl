@@ -39,7 +39,7 @@ Sorts the columns of `A` in reverse lexicographic order and returns the permutat
 to obtain this ordering.
 """
 function revlexicographic_cols(A::AbstractMatrix; kws...)
-    inds = Compat.axes(A,2)
+    inds = axes(A,2)
     cols = map(i -> (@view A[end:-1:1, i]), inds)
     if VERSION <= v"0.6.9"
         p = sortperm(cols; kws..., order=Base.Sort.Lexicographic)
@@ -109,4 +109,4 @@ end
 
 Scale the coefficients of `f` by the factor `λ`.
 """
-scale_coefficients!(f::Polynomial, λ) = Compat.rmul!(f.coefficients, λ)
+scale_coefficients!(f::Polynomial, λ) = LinearAlgebra.rmul!(f.coefficients, λ)

@@ -1,14 +1,13 @@
+import MultivariatePolynomials
+const MP = MultivariatePolynomials
+import DynamicPolynomials: @polyvar
 using StaticPolynomials
 const SP = StaticPolynomials
 using StaticArrays
-import DynamicPolynomials: @polyvar
-import MultivariatePolynomials
-const MP = MultivariatePolynomials
-using Compat
-using Compat.Test
-using Compat.LinearAlgebra
+using Test
+using LinearAlgebra
 
 include("codegen_tests.jl")
 include("basic_tests.jl")
-include("evaluation_tests.jl")
 include("gradient_tests.jl")
+include("evaluation_tests.jl")
