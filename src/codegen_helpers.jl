@@ -65,10 +65,10 @@ end
 """
     monomial_product(::Type{T}, exponent, coefficient, i::Union{Nothing, Int}=nothing)
 
-Generate the monomial product defined by `exponent` with `ooefficient.`
+Generate the monomial product defined by `exponent` with `coefficient.`
 If `i` is an `Int` the partial derivative will be generated.
 """
-function monomial_product(::Type{T}, exponent, coefficient, i::Union{Nothing, Int}=nothing) where T
+function monomial_product(::Type{T}, exponent, coefficient, access, i::Union{Nothing, Int}=nothing) where T
     if i !== nothing && exponent[i] == 0
         return (:(zero($T)), true)
     end
@@ -79,9 +79,9 @@ function monomial_product(::Type{T}, exponent, coefficient, i::Union{Nothing, In
             continue
         elseif k == i && e > 1
             pushfirst!(ops, :($e))
-            push!(ops, pow(x_(k), e - 1))
+            push!(ops, pow(access(k), e - 1))
         elseif e > 0
-            push!(ops, pow(x_(k), e))
+            push!(ops, pow(access(k), e))
         end
     end
     (batch_arithmetic_ops(:*, ops), false)

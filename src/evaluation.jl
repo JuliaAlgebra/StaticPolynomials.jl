@@ -5,17 +5,29 @@ export evaluate, gradient, gradient!, evaluate_and_gradient, evaluate_and_gradie
 
 Evaluate the polynomial `f` at `x`.
 """
-@generated function evaluate(f::Polynomial{T, NVars, E}, x::AbstractVector) where {T, NVars, E}
+@generated function evaluate(f::Polynomial{T, E, P}, x::AbstractVector) where {T, E, P}
     evaluate_impl(f)
 end
 (f::Polynomial)(x::AbstractVector) = evaluate(f, x)
 
-function evaluate_impl(f::Type{Polynomial{T, NVars, E}}) where {T, NVars, E}
+function evaluate_impl(f::Type{Polynomial{T, E, P}}) where {T, E, P}
+    n = P == Nothing ? 0 : size(P,1)
+    @show n
+    access = i -> begin
+        @show i
+        :(x[$i])
+        # if i ≤ n
+        #     :(p[$i])
+        # else
+        #     :(x[$(i-n)])
+        # end
+    end
+
     quote
-        @boundscheck length(x) ≥ NVars
+        @boundscheck length(x) ≥ size(E,1)
         c = coefficients(f)
         @inbounds out = begin
-            $(generate_evaluate(exponents(E), T))
+            $(generate_evaluate(exponents(P, E), T, access))
         end
         out
     end
@@ -46,7 +58,7 @@ end
 
 Evaluate the polynomial `f` and its gradient at `x`. Returns a tuple.
 """
-function evaluate_and_gradient(f::Polynomial{T, NVars}, x::SVector{NVars, S}) where {T, S, NVars}
+function evaluate_and_gradient(f::Polynomial, x::SVector)
     _val_gradient(f, x)
 end
 
@@ -72,13 +84,14 @@ end
     @inbounds _, grad = _val_gradient(f, x)
     grad
 end
-@generated function _val_gradient(f::Polynomial{T, NVars, E}, x::AbstractVector) where {T, NVars, E}
+@generated function _val_gradient(f::Polynomial, x::AbstractVector)
     _val_gradient_impl(f)
 end
 
-function _val_gradient_impl(f::Type{Polynomial{T, NVars, E}}) where {T, NVars, E}
+function _val_gradient_impl(f::Type{Polynomial{T, E}}) where {T, E}
     quote
-        @boundscheck length(x) ≥ NVars
+        # Base.@_propagate_inbounds_meta
+        @boundscheck length(x) ≥ size(E, 1)
         c = coefficients(f)
         @inbounds val, grad = begin
             $(generate_gradient(exponents(E), T))

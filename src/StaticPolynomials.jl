@@ -20,7 +20,7 @@ module StaticPolynomials
     include("gradient_codegen.jl")
     include("evaluation.jl")
 
-    include("system.jl")
+    # include("system.jl")
 
     include("show.jl")
 end # module

@@ -1,24 +1,27 @@
-function Base.show(io::IO, p::AbstractSystem{T, N, M}) where {T,N,M}
-    println(io, "System of $N polynomials in $M variables with coefficients in $T:")
-    for fieldname in fieldnames(typeof(p))
-        println(io, "\t$(getfield(p, fieldname))")
-    end
-end
+# function Base.show(io::IO, p::AbstractSystem{T, N, M}) where {T,N,M}
+#     println(io, "System of $N polynomials in $M variables with coefficients in $T:")
+#     for fieldname in fieldnames(typeof(p))
+#         println(io, "\t$(getfield(p, fieldname))")
+#     end
+# end
 
-function Base.show(io::IO, p::Polynomial{T, N, E}) where {T,N,E}
+function Base.show(io::IO, p::Polynomial{T}) where {T}
     first = true
     cfs = coefficients(p)
 
-    exps = exponents(E)
-    NVars, NTerms = size(exps)
+    exps = exponents(p)
+    params = parameter_exponents(p)
+    nvars, nterms = size(exps)
+    nparams = params === nothing ? 0 : size(params, 1)
 
-    for j=1:NTerms
+    for j=1:nterms
         c = cfs[j]
         if (!first && show_plus(c))
             print(io, " + ")
         end
 
-        if (c != one(T) && c != -one(T)) || all(i -> exps[i,j] == 0, 1:NVars)
+        if (c != one(T) && c != -one(T)) ||
+            all(i -> exps[i,j] == 0, 1:nvars) && all(i -> params[i,j] == 0, 1:nparams)
             show_coeff(io, c)
         elseif c == -one(T)
             first ? print(io, "-") : print(io, " - ")
@@ -26,9 +29,18 @@ function Base.show(io::IO, p::Polynomial{T, N, E}) where {T,N,E}
 
         first = false
 
-        for i=1:NVars
+        for i=1:nvars
             power = exps[i, j]
             var = p.variables[i]
+            if power == 1
+                print(io, "$(pretty_var(var))")
+            elseif power > 1
+                print(io, "$(pretty_var(var))$(pretty_power(power))")
+            end
+        end
+        for i=1:nparams
+            power = params[i, j]
+            var = p.parameters[i]
             if power == 1
                 print(io, "$(pretty_var(var))")
             elseif power > 1
