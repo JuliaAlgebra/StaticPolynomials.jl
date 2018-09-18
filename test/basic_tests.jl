@@ -1,7 +1,7 @@
 @testset "constructors" begin
     A = round.(Int, max.(0.0, 5 * rand(6, 10) .- 1))
     f = Polynomial(rand(10), A)
-    @test typeof(f) <: Polynomial{Float64, 6}
+    @test typeof(f) <: Polynomial{Float64}
 
     @test_throws AssertionError Polynomial(rand(9), A)
 
@@ -15,18 +15,6 @@
     @test f2 == f2_2
 end
 
-@testset "system constructor" begin
-    @polyvar x y
-    f1 = x^2+y^2
-    f2 = 2x^2+4y^2+3x*y^4+1
-    g1 = Polynomial(f1)
-    g2 = Polynomial(f2)
-    @test SP.system(g1, g2) isa SP.AbstractSystem{Int64, 2, 2}
-    @test SP.system(g1, g2, g2) isa SP.AbstractSystem{Int64, 3, 2}
-    @test SP.system([f1, f2, y, x]) isa SP.AbstractSystem{Int64, 4, 2}
-    @test length(SP.system([f1, f2, y, x])) == 4
-    @test coefficienttype(SP.system(g1, g2)) == Int64
-end
 
 @testset "evaluation" begin
     @polyvar x y
@@ -58,27 +46,10 @@ end
     @test string(Polynomial(2im*x[1] - x[2])) == "(0 + 2im)x₀ - x₁"
     @test_nowarn string(typeof(Polynomial(x[1]^2+x[4]^2)))
 
-    @test_nowarn show(devnull, system(Polynomial(x[1]^2+2x[2]), Polynomial(x[2]^2+2x[3])))
+    # @test_nowarn show(devnull, system(Polynomial(x[1]^2+2x[2]), Polynomial(x[2]^2+2x[3])))
 end
 
 
-@testset "system evaluation" begin
-    @polyvar x y
-    f1 = x^2+y^2
-    f2 = 2x^2+4y^2+3x*y^4+1
-    g1 = Polynomial(f1)
-    g2 = Polynomial(f2)
-
-    G = system(g1, g2)
-
-    w = rand(2)
-    @test [evaluate(g1, w), evaluate(g2, w)] ≈ evaluate(G, w)
-    @test [g1(w), g2(w)] ≈ evaluate(G, w)
-
-    w = SVector{2}(w)
-    @test evaluate(G, w) isa SVector{2}
-    @test [evaluate(g1, w), evaluate(g2, w)] ≈ evaluate(G, w)
-end
 
 @testset "helpers" begin
     x = rand()
@@ -89,30 +60,61 @@ end
     end
 end
 
+# @testset "system constructor" begin
+#     @polyvar x y
+#     f1 = x^2+y^2
+#     f2 = 2x^2+4y^2+3x*y^4+1
+#     g1 = Polynomial(f1)
+#     g2 = Polynomial(f2)
+#     @test SP.system(g1, g2) isa SP.AbstractSystem{Int64, 2, 2}
+#     @test SP.system(g1, g2, g2) isa SP.AbstractSystem{Int64, 3, 2}
+#     @test SP.system([f1, f2, y, x]) isa SP.AbstractSystem{Int64, 4, 2}
+#     @test length(SP.system([f1, f2, y, x])) == 4
+#     @test coefficienttype(SP.system(g1, g2)) == Int64
+# end
+#
+#
+# @testset "system evaluation" begin
+#     @polyvar x y
+#     f1 = x^2+y^2
+#     f2 = 2x^2+4y^2+3x*y^4+1
+#     g1 = Polynomial(f1)
+#     g2 = Polynomial(f2)
+#
+#     G = system(g1, g2)
+#
+#     w = rand(2)
+#     @test [evaluate(g1, w), evaluate(g2, w)] ≈ evaluate(G, w)
+#     @test [g1(w), g2(w)] ≈ evaluate(G, w)
+#
+#     w = SVector{2}(w)
+#     @test evaluate(G, w) isa SVector{2}
+#     @test [evaluate(g1, w), evaluate(g2, w)] ≈ evaluate(G, w)
+# end
+#
+# @testset "foreach" begin
+#     @polyvar x y
+#     g = [Polynomial(x^2+y^2), Polynomial(2x^2+4y^2+3x*y^4+1)]
+#     G = system(g...)
+#     i = 1
+#     foreach(G) do gi
+#         @test exponents(gi) == exponents(g[i])
+#         i += 1
+#     end
+# end
 
 @testset "scale coefficients" begin
     @polyvar x y
     f = Polynomial(x^2+y^2)
     scale_coefficients!(f, 2)
-    coefficients(f) == [2, 2]
+    @test coefficients(f) == [2, 2]
 
     g1 = Polynomial(x^2+y^2)
     g2 = Polynomial(2x^2+4y^2+3x*y^4+1)
-    G = system(g1, g2)
-    w = rand(2)
-    x1 = evaluate(G, w)
-    scale_coefficients!(G, [-2, 3])
-    x2 = evaluate(G, w)
-    @test x2 ≈ (-2, 3) .* x1
-end
-
-@testset "foreach" begin
-    @polyvar x y
-    g = [Polynomial(x^2+y^2), Polynomial(2x^2+4y^2+3x*y^4+1)]
-    G = system(g...)
-    i = 1
-    foreach(G) do gi
-        @test exponents(gi) == exponents(g[i])
-        i += 1
-    end
+    # G = system(g1, g2)
+    # w = rand(2)
+    # x1 = evaluate(G, w)
+    # scale_coefficients!(G, [-2, 3])
+    # x2 = evaluate(G, w)
+    # @test x2 ≈ (-2, 3) .* x1
 end

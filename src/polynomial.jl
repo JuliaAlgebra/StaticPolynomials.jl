@@ -63,7 +63,7 @@ lengthparams(params) = length(params)
 function Polynomial(coeffs::Vector, E::Matrix{<:Integer}, variables,
                     PE::Union{Nothing, Matrix{<:Integer}}, parameters)
     if PE === nothing
-        p = revlexicographic_cols_perms(A)
+        p = revlexicographic_cols_perms(E)
         SPE = nothing
     else
         p = revlexicographic_cols_perms([PE; E])
@@ -73,10 +73,11 @@ function Polynomial(coeffs::Vector, E::Matrix{<:Integer}, variables,
 end
 
 function Polynomial(coeffs::Vector, exponents::Matrix{<:Integer}, variables=defaultvariables(size(exponents, 1)))
+    @assert length(coeffs) == size(exponents, 2) "Number of coefficients doesn't match number of terms."
     Polynomial(coeffs, exponents, variables, nothing, nothing)
 end
 
-defaultvariables(n) = SVector((Symbol("x", i) for i=1:size(exponents, 1))...)
+defaultvariables(n) = SVector((Symbol("x", i) for i=1:n)...)
 
 # Implementation from Base.sort adapted to also reorder an associated vector
 """

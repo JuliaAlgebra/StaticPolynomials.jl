@@ -12,9 +12,7 @@ end
 
 function evaluate_impl(f::Type{Polynomial{T, E, P}}) where {T, E, P}
     n = P == Nothing ? 0 : size(P,1)
-    @show n
     access = i -> begin
-        @show i
         :(x[$i])
         # if i ≤ n
         #     :(p[$i])
@@ -84,17 +82,26 @@ end
     @inbounds _, grad = _val_gradient(f, x)
     grad
 end
-@generated function _val_gradient(f::Polynomial, x::AbstractVector)
+@generated function _val_gradient(f::Polynomial{T, E, P}, x::AbstractVector) where {T, E, P}
     _val_gradient_impl(f)
 end
 
-function _val_gradient_impl(f::Type{Polynomial{T, E}}) where {T, E}
+function _val_gradient_impl(f::Type{Polynomial{T, E, P}}) where {T, E, P}
+    n = P == Nothing ? 0 : size(P,1)
+    access = i -> begin
+        :(x[$i])
+        # if i ≤ n
+        #     :(p[$i])
+        # else
+        #     :(x[$(i-n)])
+        # end
+    end
     quote
         # Base.@_propagate_inbounds_meta
         @boundscheck length(x) ≥ size(E, 1)
         c = coefficients(f)
         @inbounds val, grad = begin
-            $(generate_gradient(exponents(E), T))
+            $(generate_gradient(exponents(E), exponents(P), T, access))
         end
         val, grad
     end

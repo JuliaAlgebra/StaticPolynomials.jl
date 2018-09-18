@@ -39,6 +39,8 @@ function exponents(SE::SExponents)
     end
     exps
 end
+exponents(::Type{Nothing}) = nothing
+
 exponents(::Type{Nothing}, SE::SExponents) = exponents(SE)
 exponents(A::SExponents, B::SExponents) = [exponents(A); exponents(B)]
 

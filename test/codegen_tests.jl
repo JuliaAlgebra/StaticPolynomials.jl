@@ -1,5 +1,7 @@
 @testset "monomial_product" begin
     @test SP.monomial_product(Float64, [2, 3, 1], :(c[5]))[1] == :(c[5] * (x[1] * x[1]) * (x[2] * x[2] * x[2]) * x[3])
+    #
+    #
     @test SP.monomial_product(Float64, [2, 3, 1], :(c[5]), 2)[1] == :((3 * c[5] * (x[1] * x[1]) * (x[2] * x[2])) * x[3])
 
     # optimizations

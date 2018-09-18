@@ -68,7 +68,7 @@ end
 Generate the monomial product defined by `exponent` with `coefficient.`
 If `i` is an `Int` the partial derivative will be generated.
 """
-function monomial_product(::Type{T}, exponent, coefficient, access, i::Union{Nothing, Int}=nothing) where T
+function monomial_product(::Type{T}, exponent, coefficient, i::Union{Nothing, Int}=nothing; access=x_) where T
     if i !== nothing && exponent[i] == 0
         return (:(zero($T)), true)
     end
@@ -88,10 +88,10 @@ function monomial_product(::Type{T}, exponent, coefficient, access, i::Union{Not
 end
 
 
-function monomial_product_with_derivatives(::Type{T}, exponent, coefficient) where T
-    val, _ = monomial_product(T, exponent, coefficient)
+function monomial_product_with_derivatives(::Type{T}, exponent, coefficient; access=x_) where T
+    val, _ = monomial_product(T, exponent, coefficient, access=access)
     dvals = map(1:length(exponent)) do i
-        monomial_product(T, exponent, coefficient, i)
+        monomial_product(T, exponent, coefficient, i, access=access)
     end
 
     val, dvals

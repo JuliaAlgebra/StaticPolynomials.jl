@@ -133,7 +133,6 @@ function goertzel_deriv_main!(exprs, z, p)
     for i = length(p)-2:-1:1
         ei = Symbol("e", i)
         push!(exprs, :($ei = $a)) #e_i
-        # push!(exprs, :(@show $ei))
         a = :(muladd(r, $ei, $b))
         b = :(muladd(s, $ei, $(p[i])))
 

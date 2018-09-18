@@ -5,7 +5,6 @@ Generate the statements for the evaluation of the polynomial with exponents `E`.
 This assumes that E is in reverse lexicographic order.
 """
 function generate_evaluate(E, ::Type{T}, access) where T
-    @show E
     exprs = []
     last_expr = generate_evaluate!(exprs, E, T, size(E, 1), 1, access)
     Expr(:block, exprs..., last_expr)
@@ -15,12 +14,11 @@ function generate_evaluate!(exprs, E, ::Type{T}, nvar, nterm, access) where T
     m, n = size(E)
 
     if n == 1
-        return first(monomial_product(T, E[:,1], :(c[$nterm]), access))
+        return first(monomial_product(T, E[:,1], :(c[$nterm]), access=access))
     end
 
     if m == 1
         coeffs = [:(c[$j]) for j=nterm:nterm+n]
-        @show access(nvar), nvar
         return evalpoly(T, E[1,:], coeffs, access(nvar))
     end
 
@@ -36,6 +34,5 @@ function generate_evaluate!(exprs, E, ::Type{T}, nvar, nterm, access) where T
         sub_nterm += size(E_d, 2)
     end
 
-    @show access(nvar), nvar
     return evalpoly(T, degrees, coeffs, access(nvar))
 end

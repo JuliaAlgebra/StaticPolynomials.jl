@@ -110,7 +110,7 @@ end
 pretty_power(pow::Int) = join(map(unicode_superscript, reverse(digits(pow))))
 
 function pretty_var(var::String)
-    m = match(r"([a-zA-Z]+)(?:_*)(\d+)", var)
+    m = match(r"([a-zA-Z]+)(?:_*)(?:\[*)(\d+)(?:\]*)", var)
     if m === nothing
         var
     else
