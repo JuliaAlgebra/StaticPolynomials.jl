@@ -13,6 +13,14 @@
     @test coefficienttype(f2) == Int64
     f2_2 = Polynomial(2x^2+4y^2+3x*y+1)
     @test f2 == f2_2
+
+    @polyvar x y a b
+    f = Polynomial(2x+b*y+a, parameters=[a, b])
+    @test f isa Polynomial
+    @test nvariables(f) == 2
+    @test parameters(f) == [:a, :b]
+
+    @test_throws ErrorException Polynomial(2x+b*y+a, variables=[x], parameters=[a, b])
 end
 
 
@@ -66,7 +74,12 @@ end
     @test string(Polynomial(sum((-1)^i * x[i]^i for i=1:length(x)))) ==
         "-x₀ + x₁² - x₂³ + x₃⁴ - x₄⁵ + x₅⁶ - x₆⁷ + x₇⁸ - x₈⁹ + x₉¹⁰"
     @test string(Polynomial(2im*x[1] - x[2])) == "(0 + 2im)x₀ - x₁"
+    @test sprint(show, Polynomial((2+0im)*x[1] - x[2])) == "2x₀ - x₁"
     @test_nowarn string(typeof(Polynomial(x[1]^2+x[4]^2)))
+
+    @polyvar x a b
+    @test sprint(show, Polynomial(x+a^2+b, parameters=[a, b])) == "a² + b + x"
+    @test sprint(show, Polynomial(zero(x))) == "0"
 end
 
 
@@ -102,7 +115,7 @@ end
     g1 = Polynomial(f1)
     g2 = Polynomial(f2)
 
-    G = system(g1, g2)
+    G = PolynomialSystem(g1, g2)
 
     w = rand(2)
     @test [evaluate(g1, w), evaluate(g2, w)] ≈ evaluate(G, w)
@@ -115,7 +128,7 @@ end
     @polyvar x y a b
 
     F = PolynomialSystem(x^2+x*y+a+a*x, x+y+b, parameters=[a, b])
-    
+
     @test F([0,0], [1, 2]) == [1, 2]
     @test jacobian(F, [0, 0], [3, 2]) == [3 0; 1 1]
 
@@ -126,7 +139,7 @@ end
 @testset "foreach" begin
     @polyvar x y
     g = [Polynomial(x^2+y^2), Polynomial(2x^2+4y^2+3x*y^4+1)]
-    G = system(g...)
+    G = PolynomialSystem(g...)
     i = 1
     foreach(G) do gi
         @test exponents(gi) == exponents(g[i])

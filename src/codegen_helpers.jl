@@ -24,11 +24,7 @@ function batch_arithmetic_ops(op::Symbol, ops)
         end
         l = batch_end + 1
     end
-    if length(batches) > 1
-        return batch_arithmetic_ops(op, batches)
-    else
-        return batches[1]
-    end
+    return length(batches) == 1 ? batches[1] : batch_arithmetic_ops(op, batches)
 end
 
 
