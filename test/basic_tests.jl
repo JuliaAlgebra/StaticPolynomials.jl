@@ -111,6 +111,16 @@ end
     w = SVector{2}(w)
     @test evaluate(G, w) isa SVector{2}
     @test [evaluate(g1, w), evaluate(g2, w)] ≈ evaluate(G, w)
+
+    @polyvar x y a b
+
+    F = PolynomialSystem(x^2+x*y+a+a*x, x+y+b, parameters=[a, b])
+    
+    @test F([0,0], [1, 2]) == [1, 2]
+    @test jacobian(F, [0, 0], [3, 2]) == [3 0; 1 1]
+
+    @test parameters(F) == [:a, :b]
+    @test variables(F) == [:x, :y]
 end
 
 @testset "foreach" begin
