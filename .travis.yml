@@ -29,6 +29,6 @@ matrix:
 ## uncomment the following lines to override the default test script
 after_success:
   # push coverage results to Codecov
-  - julia -e 'cd(Pkg.dir("StaticPolynomials")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
-  - julia -e 'Pkg.add("Documenter")'
-  - julia -e 'cd(Pkg.dir("StaticPolynomials")); include(joinpath("docs", "make.jl"))'
+  - julia -e 'import Pkg; Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder())'
+  - julia -e 'import Pkg; Pkg.add("Documenter");'
+  - julia -e 'import StaticPolynomials; include(joinpath(dirname(pathof(StaticPolynomials)), "..", "docs", "make.jl"))'
