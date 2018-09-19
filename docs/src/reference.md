@@ -19,8 +19,7 @@ evaluate_and_gradient!
 ## Systems of Polynomials
 
 ```@docs
-AbstractSystem
-system
+PolynomialSystem
 nvariables(::AbstractSystem)
 npolynomials(::AbstractSystem)
 coefficienttype(::AbstractSystem)
