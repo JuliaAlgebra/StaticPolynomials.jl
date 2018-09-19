@@ -1,164 +1,167 @@
-@testset "constructors" begin
-    A = round.(Int, max.(0.0, 5 * rand(6, 10) .- 1))
-    f = Polynomial(rand(10), A)
-    @test typeof(f) <: Polynomial{Float64}
+@testset "Basics" begin
 
-    @test_throws AssertionError Polynomial(rand(9), A)
+    @testset "constructors" begin
+        A = round.(Int, max.(0.0, 5 * rand(6, 10) .- 1))
+        f = Polynomial(rand(10), A)
+        @test typeof(f) <: Polynomial{Float64}
 
-    @polyvar x y
-    f2 = Polynomial(2x^2+4y^2+3x*y+1)
-    @test exponents(f2) == [0 2 1 0; 0 0 1 2]
-    @test nvariables(f2) == 2
-    @test coefficients(f2) == [1, 2, 3, 4]
-    @test coefficienttype(f2) == Int64
-    f2_2 = Polynomial(2x^2+4y^2+3x*y+1)
-    @test f2 == f2_2
+        @test_throws AssertionError Polynomial(rand(9), A)
 
-    @polyvar x y a b
-    f = Polynomial(2x+b*y+a, parameters=[a, b])
-    @test f isa Polynomial
-    @test nvariables(f) == 2
-    @test parameters(f) == [:a, :b]
+        @polyvar x y
+        f2 = Polynomial(2x^2+4y^2+3x*y+1)
+        @test exponents(f2) == [0 2 1 0; 0 0 1 2]
+        @test nvariables(f2) == 2
+        @test coefficients(f2) == [1, 2, 3, 4]
+        @test coefficienttype(f2) == Int64
+        f2_2 = Polynomial(2x^2+4y^2+3x*y+1)
+        @test f2 == f2_2
 
-    @test_throws ErrorException Polynomial(2x+b*y+a, variables=[x], parameters=[a, b])
-end
+        @polyvar x y a b
+        f = Polynomial(2x+b*y+a, parameters=[a, b])
+        @test f isa Polynomial
+        @test nvariables(f) == 2
+        @test parameters(f) == [:a, :b]
 
-
-@testset "evaluation" begin
-    @polyvar x y
-    f2 = 2x^2+4y^2+3x*y^4+1
-    g = Polynomial(f2)
-    w = rand(2)
-
-    @test abs(SP.evaluate(g, w) - f2(x => w[1], y => w[2])) < 1e-13
-
-    f2_x = MP.differentiate(2x^2+4y^2+3x*y^4+1, x)
-    f2_y = MP.differentiate(2x^2+4y^2+3x*y^4+1, y)
-    @test norm(SP.gradient(g, w) - [f2_x(x => w[1], y => w[2]), f2_y(x => w[1], y => w[2])]) < 1e-13
-
-    u = zeros(2)
-    SP.gradient!(u, g, w)
-    @test u ≈ SP.gradient(g, w)
-
-    @test all(SP.evaluate_and_gradient(g, w) .≈ (g(w), u))
-
-    @test all(SP.evaluate_and_gradient!(u, g, w) .≈ g(w))
-    @test u ≈ SP.gradient(g, w)
-end
-
-@testset "Evaluation with parameters" begin
-    @polyvar x y z a b
-    f = 2x^2+4a*y^2+(a^2+b^4+a+b+1)*3x*y^4+1+a*z+b-2x*b^6
-    g = Polynomial(f, parameters=[a, b])
-
-    w = [5, 3, -4]
-    p = [-2, 7]
-    f_wp = f([x, y, z] => w, [a, b] => p)
-    ∇_wp = map(fi -> fi([x, y, z] => w, [a, b] => p), MP.differentiate(f, [x, y, z]))
-
-    @test g(w, p) == f_wp
-    @test gradient(g, w,p) == ∇_wp
-    @test evaluate_and_gradient(g, w, p) == (f_wp, ∇_wp)
-
-    u = zeros(Int, 3)
-    gradient!(u, g, w, p)
-    @test u == ∇_wp
-    u .= 0
-    @test evaluate_and_gradient!(u, g, w, p) == f_wp
-    @test u == ∇_wp
-end
-
-@testset "show" begin
-    @polyvar x[0:9]
-    @test string(Polynomial(x[1])) == "x₀"
-    @test string(Polynomial(sum((-1)^i * x[i]^i for i=1:length(x)))) ==
-        "-x₀ + x₁² - x₂³ + x₃⁴ - x₄⁵ + x₅⁶ - x₆⁷ + x₇⁸ - x₈⁹ + x₉¹⁰"
-    @test string(Polynomial(2im*x[1] - x[2])) == "(0 + 2im)x₀ - x₁"
-    @test sprint(show, Polynomial((2+0im)*x[1] - x[2])) == "2x₀ - x₁"
-    @test_nowarn string(typeof(Polynomial(x[1]^2+x[4]^2)))
-
-    @polyvar x a b
-    @test sprint(show, Polynomial(x+a^2+b, parameters=[a, b])) == "a² + b + x"
-    @test sprint(show, Polynomial(zero(x))) == "0"
-end
-
-
-@testset "helpers" begin
-    x = rand()
-    z = rand(Complex{Float64})
-    for k = 4:15
-        @test abs(SP.pow(x, k) - x^k) < 1e-13
-        @test abs(SP.pow(z, k) - z^k) < 1e-13
+        @test_throws ErrorException Polynomial(2x+b*y+a, variables=[x], parameters=[a, b])
     end
-end
-
-@testset "system constructor" begin
-    @polyvar x y
-    f1 = x^2+y^2
-    f2 = 2x^2+4y^2+3x*y^4+1
-    g1 = Polynomial(f1)
-    g2 = Polynomial(f2)
-    @test_deprecated SP.system(g1, g2)
-    @test PolynomialSystem(g1, g2) isa PolynomialSystem{2, 2}
-    @test PolynomialSystem(g1, g2, g2) isa PolynomialSystem{3, 2}
-    @test PolynomialSystem([f1, f2, y, x]) isa PolynomialSystem{4, 2}
-    @test length(SP.PolynomialSystem([f1, f2, y, x])) == 4
-
-    @test_nowarn sprint(show, PolynomialSystem([f1, f2, y, x]))
-end
 
 
-@testset "system evaluation" begin
-    @polyvar x y
-    f1 = x^2+y^2
-    f2 = 2x^2+4y^2+3x*y^4+1
-    g1 = Polynomial(f1)
-    g2 = Polynomial(f2)
+    @testset "evaluation" begin
+        @polyvar x y
+        f2 = 2x^2+4y^2+3x*y^4+1
+        g = Polynomial(f2)
+        w = rand(2)
 
-    G = PolynomialSystem(g1, g2)
+        @test abs(SP.evaluate(g, w) - f2(x => w[1], y => w[2])) < 1e-13
 
-    w = rand(2)
-    @test [evaluate(g1, w), evaluate(g2, w)] ≈ evaluate(G, w)
-    @test [g1(w), g2(w)] ≈ evaluate(G, w)
+        f2_x = MP.differentiate(2x^2+4y^2+3x*y^4+1, x)
+        f2_y = MP.differentiate(2x^2+4y^2+3x*y^4+1, y)
+        @test norm(SP.gradient(g, w) - [f2_x(x => w[1], y => w[2]), f2_y(x => w[1], y => w[2])]) < 1e-13
 
-    w = SVector{2}(w)
-    @test evaluate(G, w) isa SVector{2}
-    @test [evaluate(g1, w), evaluate(g2, w)] ≈ evaluate(G, w)
+        u = zeros(2)
+        SP.gradient!(u, g, w)
+        @test u ≈ SP.gradient(g, w)
 
-    @polyvar x y a b
+        @test all(SP.evaluate_and_gradient(g, w) .≈ (g(w), u))
 
-    F = PolynomialSystem(x^2+x*y+a+a*x, x+y+b, parameters=[a, b])
-
-    @test F([0,0], [1, 2]) == [1, 2]
-    @test jacobian(F, [0, 0], [3, 2]) == [3 0; 1 1]
-
-    @test parameters(F) == [:a, :b]
-    @test variables(F) == [:x, :y]
-end
-
-@testset "foreach" begin
-    @polyvar x y
-    g = [Polynomial(x^2+y^2), Polynomial(2x^2+4y^2+3x*y^4+1)]
-    G = PolynomialSystem(g...)
-    i = 1
-    foreach(G) do gi
-        @test exponents(gi) == exponents(g[i])
-        i += 1
+        @test all(SP.evaluate_and_gradient!(u, g, w) .≈ g(w))
+        @test u ≈ SP.gradient(g, w)
     end
-end
 
-@testset "scale coefficients" begin
-    @polyvar x y
-    f = Polynomial(x^2+y^2)
-    scale_coefficients!(f, 2)
-    @test coefficients(f) == [2, 2]
+    @testset "Evaluation with parameters" begin
+        @polyvar x y z a b
+        f = 2x^2+4a*y^2+(a^2+b^4+a+b+1)*3x*y^4+1+a*z+b-2x*b^6
+        g = Polynomial(f, parameters=[a, b])
 
-    g1 = Polynomial(x^2+y^2)
-    g2 = Polynomial(2x^2+4y^2+3x*y^4+1)
-    G = PolynomialSystem(g1, g2)
-    w = rand(2)
-    x1 = evaluate(G, w)
-    scale_coefficients!(G, [-2, 3])
-    x2 = evaluate(G, w)
-    @test x2 ≈ (-2, 3) .* x1
+        w = [5, 3, -4]
+        p = [-2, 7]
+        f_wp = f([x, y, z] => w, [a, b] => p)
+        ∇_wp = map(fi -> fi([x, y, z] => w, [a, b] => p), MP.differentiate(f, [x, y, z]))
+
+        @test g(w, p) == f_wp
+        @test gradient(g, w,p) == ∇_wp
+        @test evaluate_and_gradient(g, w, p) == (f_wp, ∇_wp)
+
+        u = zeros(Int, 3)
+        gradient!(u, g, w, p)
+        @test u == ∇_wp
+        u .= 0
+        @test evaluate_and_gradient!(u, g, w, p) == f_wp
+        @test u == ∇_wp
+    end
+
+    @testset "show" begin
+        @polyvar x[0:9]
+        @test string(Polynomial(x[1])) == "x₀"
+        @test string(Polynomial(sum((-1)^i * x[i]^i for i=1:length(x)))) ==
+            "-x₀ + x₁² - x₂³ + x₃⁴ - x₄⁵ + x₅⁶ - x₆⁷ + x₇⁸ - x₈⁹ + x₉¹⁰"
+        @test string(Polynomial(2im*x[1] - x[2])) == "(0 + 2im)x₀ - x₁"
+        @test sprint(show, Polynomial((2+0im)*x[1] - x[2])) == "2x₀ - x₁"
+        @test_nowarn string(typeof(Polynomial(x[1]^2+x[4]^2)))
+
+        @polyvar x a b
+        @test sprint(show, Polynomial(x+a^2+b, parameters=[a, b])) == "a² + b + x"
+        @test sprint(show, Polynomial(zero(x))) == "0"
+    end
+
+
+    @testset "helpers" begin
+        x = rand()
+        z = rand(Complex{Float64})
+        for k = 4:15
+            @test abs(SP.pow(x, k) - x^k) < 1e-13
+            @test abs(SP.pow(z, k) - z^k) < 1e-13
+        end
+    end
+
+    @testset "system constructor" begin
+        @polyvar x y
+        f1 = x^2+y^2
+        f2 = 2x^2+4y^2+3x*y^4+1
+        g1 = Polynomial(f1)
+        g2 = Polynomial(f2)
+        @test_deprecated SP.system(g1, g2)
+        @test PolynomialSystem(g1, g2) isa PolynomialSystem{2, 2}
+        @test PolynomialSystem(g1, g2, g2) isa PolynomialSystem{3, 2}
+        @test PolynomialSystem([f1, f2, y, x]) isa PolynomialSystem{4, 2}
+        @test length(SP.PolynomialSystem([f1, f2, y, x])) == 4
+
+        @test_nowarn sprint(show, PolynomialSystem([f1, f2, y, x]))
+    end
+
+
+    @testset "system evaluation" begin
+        @polyvar x y
+        f1 = x^2+y^2
+        f2 = 2x^2+4y^2+3x*y^4+1
+        g1 = Polynomial(f1)
+        g2 = Polynomial(f2)
+
+        G = PolynomialSystem(g1, g2)
+
+        w = rand(2)
+        @test [evaluate(g1, w), evaluate(g2, w)] ≈ evaluate(G, w)
+        @test [g1(w), g2(w)] ≈ evaluate(G, w)
+
+        w = SVector{2}(w)
+        @test evaluate(G, w) isa SVector{2}
+        @test [evaluate(g1, w), evaluate(g2, w)] ≈ evaluate(G, w)
+
+        @polyvar x y a b
+
+        F = PolynomialSystem(x^2+x*y+a+a*x, x+y+b, parameters=[a, b])
+
+        @test F([0,0], [1, 2]) == [1, 2]
+        @test jacobian(F, [0, 0], [3, 2]) == [3 0; 1 1]
+
+        @test parameters(F) == [:a, :b]
+        @test variables(F) == [:x, :y]
+    end
+
+    @testset "foreach" begin
+        @polyvar x y
+        g = [Polynomial(x^2+y^2), Polynomial(2x^2+4y^2+3x*y^4+1)]
+        G = PolynomialSystem(g...)
+        i = 1
+        foreach(G) do gi
+            @test exponents(gi) == exponents(g[i])
+            i += 1
+        end
+    end
+
+    @testset "scale coefficients" begin
+        @polyvar x y
+        f = Polynomial(x^2+y^2)
+        scale_coefficients!(f, 2)
+        @test coefficients(f) == [2, 2]
+
+        g1 = Polynomial(x^2+y^2)
+        g2 = Polynomial(2x^2+4y^2+3x*y^4+1)
+        G = PolynomialSystem(g1, g2)
+        w = rand(2)
+        x1 = evaluate(G, w)
+        scale_coefficients!(G, [-2, 3])
+        x2 = evaluate(G, w)
+        @test x2 ≈ (-2, 3) .* x1
+    end
 end

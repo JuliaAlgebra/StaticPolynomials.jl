@@ -61,10 +61,10 @@ lengthparams(params) = length(params)
 function Polynomial(coeffs::Vector, E::Matrix{<:Integer}, variables,
                     PE::Union{Nothing, Matrix{<:Integer}}, parameters)
     if PE === nothing
-        p = revlexicographic_cols_perms(E)
+        p = revlexicographic_cols_perm(E)
         SPE = nothing
     else
-        p = revlexicographic_cols_perms([PE; E])
+        p = revlexicographic_cols_perm([PE; E])
         SPE = SExponents(PE[:, p])
     end
     return Polynomial(coeffs[p], SExponents(E[:,p]), variables, SPE, parameters)
@@ -76,19 +76,6 @@ function Polynomial(coeffs::Vector, exponents::Matrix{<:Integer}, variables=defa
 end
 
 defaultvariables(n) = SVector((Symbol("x", i) for i=1:n)...)
-
-# Implementation from Base.sort adapted to also reorder an associated vector
-"""
-    revlexicographic_cols(A, v)
-
-Sorts the columns of `A` in reverse lexicographic order and returns the permutation vector
-to obtain this ordering.
-"""
-function revlexicographic_cols_perms(A::AbstractMatrix; kws...)
-    inds = axes(A,2)
-    cols = map(i -> (@view A[end:-1:1, i]), inds)
-    sortperm(cols; kws...)
-end
 
 """
     coefficients(f)
