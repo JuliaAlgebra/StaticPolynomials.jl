@@ -57,10 +57,12 @@
         p = [-2, 7]
         f_wp = f([x, y, z] => w, [a, b] => p)
         ∇_wp = map(fi -> fi([x, y, z] => w, [a, b] => p), MP.differentiate(f, [x, y, z]))
+        ∇p_wp = map(fi -> fi([x, y, z] => w, [a, b] => p), MP.differentiate(f, [a, b]))
 
         @test g(w, p) == f_wp
         @test gradient(g, w,p) == ∇_wp
         @test evaluate_and_gradient(g, w, p) == (f_wp, ∇_wp)
+        @test gradient_parameters(g, w, p) == ∇p_wp
 
         u = zeros(Int, 3)
         gradient!(u, g, w, p)
@@ -68,6 +70,10 @@
         u .= 0
         @test evaluate_and_gradient!(u, g, w, p) == f_wp
         @test u == ∇_wp
+
+        v = zeros(Int, 2)
+        gradient_parameters!(v, g, w, p)
+        @test v == ∇p_wp
     end
 
     @testset "show" begin

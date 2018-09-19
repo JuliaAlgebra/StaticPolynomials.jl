@@ -15,7 +15,7 @@ function generate_gradient(E, P, ::Type{T}, access_input; for_parameters=false) 
         # E and P are sorted with respect to [P; E] but since we want to derivate wrt
         # the paramters we habe to reorder them
         p = revlexicographic_cols_perm([E; P])
-        coeffperm = P
+        coeffperm = p
         E = E[:, p]
         P = P[:, p]
         # we can derivate wrt the parameters by changing the roles
@@ -123,7 +123,7 @@ function univariate!(exprs, E::AbstractMatrix, P, ::Type{T}, nvar, nterm, coeffp
 end
 
 """
-    coefficients_with_parameters!(exprs, E, P, ::Type{T}, nterm, access_input)
+    coefficients_with_parameters!(exprs, E, P, ::Type{T}, nterm, coeffperm, access_input)
 
 If we have parameters it can happen that there are duplicates in E.
 For each group of duplicates we have to evaluate the coefficient polynomial.

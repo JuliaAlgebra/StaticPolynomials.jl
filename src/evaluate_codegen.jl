@@ -18,7 +18,7 @@ function generate_evaluate!(exprs, E, ::Type{T}, nvar, nterm, coeffperm, access_
     end
 
     if m == 1
-        coeffs = [:(c[$(coeffperm[j])]) for j=nterm:nterm+n]
+        coeffs = [:(c[$(coeffperm[j])]) for j=nterm:nterm+n-1]
         return evalpoly(T, E[1,:], coeffs, access_input(nvar))
     end
 

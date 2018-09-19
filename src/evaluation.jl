@@ -1,4 +1,9 @@
-export evaluate, gradient, gradient!, evaluate_and_gradient, evaluate_and_gradient!
+export evaluate, gradient, gradient!,
+    evaluate_and_gradient, evaluate_and_gradient!,
+    gradient_parameters, gradient_parameters!
+
+import Base: @propagate_inbounds
+
 
 """
     evaluate(f::Polynomial, x)
@@ -152,8 +157,53 @@ function _val_gradient_impl(f::Type{Polynomial{T, E, P}}) where {T, E, P}
         Base.@_propagate_inbounds_meta
         @boundscheck length(x) ≥ $(size(E)[1])
         c = coefficients(f)
-        @inbounds val, grad = begin
+        val, grad = begin
             $(generate_gradient(exponents(E), exponents(P), T, access_input))
+        end
+        val, grad
+    end
+end
+
+
+"""
+    gradient_parameters(f::Polynomial, x, p)
+
+Evaluate the gradient of the polynomial `f` w.r.t. the parameters at `x` with parameters `p`.
+"""
+gradient_parameters(f::Polynomial, x::AbstractVector, p) = Vector(_gradient_parameters(f, x, p))
+gradient_parameters(f::Polynomial, x::SVector, p) = _gradient_parameters(f, x, p)
+
+
+"""
+    gradient_parameters!(u, f::Polynomial, x, p)
+
+Evaluate the gradient of the polynomial `f` w.r.t. the parameters at `x` with parameters `p` and store the result in `u`.
+"""
+function gradient_parameters!(u::AbstractVector, f::Polynomial, x::AbstractVector, p)
+    u .= _gradient_parameters(f, x, p)
+    u
+end
+
+@propagate_inbounds _gradient_parameters(f, x, p) = _val_gradient_parameters(f, x, p)[2]
+
+@generated function _val_gradient_parameters(f::Polynomial, x::AbstractVector, p)
+    _val_gradient_parameters_impl(f)
+end
+
+function _val_gradient_parameters_impl(f::Type{Polynomial{T, E, P}}) where {T, E, P}
+    @assert P != Nothing
+
+    # The role of E and P is interchanged
+    n = size(E, 1)
+    access_input(i) = i ≤ n ? :(x[$i]) : :(p[$(i-n)])
+
+    quote
+        Base.@_propagate_inbounds_meta
+        @boundscheck length(x) ≥ $(size(E, 1))
+        @boundscheck length(p) ≥ $(size(P, 1))
+        c = coefficients(f)
+        @inbounds val, grad = begin
+            $(generate_gradient(exponents(E), exponents(P), T, access_input; for_parameters=true))
         end
         val, grad
     end
