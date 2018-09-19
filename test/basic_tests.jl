@@ -38,6 +38,28 @@ end
     @test u ≈ SP.gradient(g, w)
 end
 
+@testset "Evaluation with parameters" begin
+    @polyvar x y z a b
+    f = 2x^2+4a*y^2+(a^2+b^4+a+b+1)*3x*y^4+1+a*z+b-2x*b^6
+    g = Polynomial(f, parameters=[a, b])
+
+    w = [5, 3, -4]
+    p = [-2, 7]
+    f_wp = f([x, y, z] => w, [a, b] => p)
+    ∇_wp = map(fi -> fi([x, y, z] => w, [a, b] => p), MP.differentiate(f, [x, y, z]))
+
+    @test g(w, p) == f_wp
+    @test gradient(g, w,p) == ∇_wp
+    @test evaluate_and_gradient(g, w, p) == (f_wp, ∇_wp)
+
+    u = zeros(Int, 3)
+    gradient!(u, g, w, p)
+    @test u == ∇_wp
+    u .= 0
+    @test evaluate_and_gradient!(u, g, w, p) == f_wp
+    @test u == ∇_wp
+end
+
 @testset "show" begin
     @polyvar x[0:9]
     @test string(Polynomial(x[1])) == "x₀"

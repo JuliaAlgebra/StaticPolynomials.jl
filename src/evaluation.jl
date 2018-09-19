@@ -4,25 +4,32 @@ export evaluate, gradient, gradient!, evaluate_and_gradient, evaluate_and_gradie
     evaluate(f::Polynomial, x)
 
 Evaluate the polynomial `f` at `x`.
+
+    evaluate(f::Polynomial, x, p)
+
+Evaluate `f` at `x` with parameters `p`.
 """
-@generated function evaluate(f::Polynomial{T, E, P}, x::AbstractVector) where {T, E, P}
+@generated function evaluate(f::Polynomial{T, E, Nothing}, x::AbstractVector) where {T, E, P}
+    evaluate_impl(f)
+end
+
+@generated function evaluate(f::Polynomial{T, E, P}, x::AbstractVector, p) where {T, E, P}
     evaluate_impl(f)
 end
 (f::Polynomial)(x::AbstractVector) = evaluate(f, x)
+(f::Polynomial)(x::AbstractVector, p) = evaluate(f, x, p)
 
 function evaluate_impl(f::Type{Polynomial{T, E, P}}) where {T, E, P}
-    n = P == Nothing ? 0 : size(P,1)
-    access = i -> begin
-        :(x[$i])
-        # if i ≤ n
-        #     :(p[$i])
-        # else
-        #     :(x[$(i-n)])
-        # end
+    if P == Nothing
+        access = x_
+    else
+        n = size(P, 1)
+        access(i) = i ≤ n ? :(p[$i]) : :(x[$(i-n)])
     end
 
     quote
-        @boundscheck length(x) ≥ size(E,1)
+        Base.@_propagate_inbounds_meta
+        @boundscheck length(x) ≥ $(size(E,1))
         c = coefficients(f)
         @inbounds out = begin
             $(generate_evaluate(exponents(P, E), T, access))
@@ -35,19 +42,36 @@ end
     gradient(f::Polynomial, x)
 
 Evaluate the gradient of the polynomial `f` at `x`.
+
+    gradient(f::Polynomial, x, p)
+
+Evaluate the gradient of the polynomial `f` at `x` with parameters `p`.
 """
-gradient(f::Polynomial, x::AbstractVector) = Vector(_gradient(f, x))
-function gradient(f::Polynomial{T, NVars}, x::SVector{NVars, S}) where {T, S, NVars}
+function gradient(f::Polynomial{T, E, Nothing}, x::AbstractVector) where {T, E}
+    Vector(_gradient(f, x))
+end
+gradient(f::Polynomial, x::AbstractVector, p) = Vector(_gradient(f, x, p))
+function gradient(f::Polynomial{T, E, Nothing}, x::SVector) where {T, E}
     _gradient(f, x)
 end
+gradient(f::Polynomial, x::SVector, p) = _gradient(f, x, p)
+
 
 """
     gradient!(u, f::Polynomial, x)
 
 Evaluate the gradient of the polynomial `f` at `x` and store the result in `u`.
+
+    gradient!(u, f::Polynomial, x, p)
+
+Evaluate the gradient of the polynomial `f` at `x` with parameters `p` and store the result in `u`.
 """
 function gradient!(u::AbstractVector, f::Polynomial, x::AbstractVector)
     u .= _gradient(f, x)
+    u
+end
+function gradient!(u::AbstractVector, f::Polynomial, x::AbstractVector, p)
+    u .= _gradient(f, x, p)
     u
 end
 
@@ -55,24 +79,45 @@ end
     evaluate_and_gradient(f::Polynomial, x)
 
 Evaluate the polynomial `f` and its gradient at `x`. Returns a tuple.
+
+    evaluate_and_gradient(f::Polynomial, x, p)
+
+Evaluate the polynomial `f` and its gradient at `x` with parameters `p`. Returns a tuple.
 """
-function evaluate_and_gradient(f::Polynomial, x::SVector)
+function evaluate_and_gradient(f::Polynomial{T, E, Nothing}, x::SVector) where {T, E}
     _val_gradient(f, x)
 end
+evaluate_and_gradient(f::Polynomial, x::SVector, p) = _val_gradient(f, x, p)
 
-function evaluate_and_gradient(f::Polynomial, x::AbstractVector)
+function evaluate_and_gradient(f::Polynomial{T, E, Nothing}, x::AbstractVector) where {T, E}
     @inbounds val, grad = _val_gradient(f, x)
     val, Vector(grad)
 end
+function evaluate_and_gradient(f::Polynomial, x::AbstractVector, p)
+    @inbounds val, grad = _val_gradient(f, x, p)
+    val, Vector(grad)
+end
+
+
 
 """
     evaluate_and_gradient!(u, f::Polynomial, x)
 
 Evaluate the polynomial `f` and its gradient at `x`. Stores the gradient in `u` and
 returns the `f(x)`.
+
+    evaluate_and_gradient!(u, f::Polynomial, x, p)
+
+Evaluate the polynomial `f` and its gradient at `x` with parameters `p`. Stores the gradient in `u` and
+returns the `f(x)`.
 """
-function evaluate_and_gradient!(u::AbstractVector, f::Polynomial, x::AbstractVector)
+function evaluate_and_gradient!(u::AbstractVector, f::Polynomial{T, E, Nothing}, x::AbstractVector) where {T, E}
     @inbounds val, grad = _val_gradient(f, x)
+    u .= grad
+    val
+end
+function evaluate_and_gradient!(u::AbstractVector, f::Polynomial, x::AbstractVector, p)
+    @inbounds val, grad = _val_gradient(f, x, p)
     u .= grad
     val
 end
@@ -82,23 +127,30 @@ end
     @inbounds _, grad = _val_gradient(f, x)
     grad
 end
-@generated function _val_gradient(f::Polynomial{T, E, P}, x::AbstractVector) where {T, E, P}
+
+@inline function _gradient(f, x, p)
+    @inbounds _, grad = _val_gradient(f, x, p)
+    grad
+end
+
+@generated function _val_gradient(f::Polynomial{T, E, Nothing}, x::AbstractVector) where {T, E}
+    _val_gradient_impl(f)
+end
+
+@generated function _val_gradient(f::Polynomial, x::AbstractVector, p)
     _val_gradient_impl(f)
 end
 
 function _val_gradient_impl(f::Type{Polynomial{T, E, P}}) where {T, E, P}
-    n = P == Nothing ? 0 : size(P,1)
-    access = i -> begin
-        :(x[$i])
-        # if i ≤ n
-        #     :(p[$i])
-        # else
-        #     :(x[$(i-n)])
-        # end
+    if P == Nothing
+        access = x_
+    else
+        n = size(P, 1)
+        access(i) = i ≤ n ? :(p[$i]) : :(x[$(i-n)])
     end
     quote
-        # Base.@_propagate_inbounds_meta
-        @boundscheck length(x) ≥ size(E, 1)
+        Base.@_propagate_inbounds_meta
+        @boundscheck length(x) ≥ $(size(E, 1))
         c = coefficients(f)
         @inbounds val, grad = begin
             $(generate_gradient(exponents(E), exponents(P), T, access))
