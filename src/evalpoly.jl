@@ -51,13 +51,8 @@ julia> @evalpoly(2, 1, 1, 1)
 ```
 """
 macro evalpoly_derivative(z, p...)
-    if VERSION <= v"0.6.9"
-        R = Expr(:macrocall, Symbol("@horner_deriv"), :tt, map(esc, p)...)
-        C = Expr(:macrocall, Symbol("@goertzel_deriv"), :tt, map(esc, p)...)
-    else
-        R = Expr(:macrocall, Symbol("@horner_deriv"), (), :tt, map(esc, p)...)
-        C = Expr(:macrocall, Symbol("@goertzel_deriv"), (), :tt, map(esc, p)...)
-    end
+    R = Expr(:macrocall, Symbol("@horner_deriv"), (), :tt, map(esc, p)...)
+    C = Expr(:macrocall, Symbol("@goertzel_deriv"), (), :tt, map(esc, p)...)
     :(let tt = $(esc(z))
           isa(tt, Complex) ? $C : $R
       end)
@@ -133,7 +128,6 @@ function goertzel_deriv_main!(exprs, z, p)
     for i = length(p)-2:-1:1
         ei = Symbol("e", i)
         push!(exprs, :($ei = $a)) #e_i
-        # push!(exprs, :(@show $ei))
         a = :(muladd(r, $ei, $b))
         b = :(muladd(s, $ei, $(p[i])))
 

@@ -23,7 +23,8 @@ function Base.:(==)(f::SExponents{N}, g::SExponents{N}) where {N}
     f.exponents == g.exponents && f.size == g.size
 end
 Base.hash(f::SExponents, h) = hash(f.exponents, hash(f.size, h))
-
+Base.size(SE::SExponents) = SE.size
+Base.size(SE::SExponents, i) = size(SE)[1]
 
 """
     exponents(::SExponents)
@@ -38,6 +39,11 @@ function exponents(SE::SExponents)
     end
     exps
 end
+exponents(::Type{Nothing}) = nothing
+
+exponents(::Type{Nothing}, SE::SExponents) = exponents(SE)
+exponents(A::SExponents, B::SExponents) = [exponents(A); exponents(B)]
+
 
 @static if VERSION ≥ v"0.7-"
     function Base.show(io::IO, SE::SExponents{N}) where {N}

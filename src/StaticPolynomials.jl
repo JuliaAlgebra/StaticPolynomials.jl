@@ -13,6 +13,7 @@ module StaticPolynomials
     include("helpers.jl")
     include("sexponents.jl")
     include("polynomial.jl")
+    include("show.jl")
 
     include("codegen_helpers.jl")
     include("evalpoly.jl")
@@ -20,7 +21,5 @@ module StaticPolynomials
     include("gradient_codegen.jl")
     include("evaluation.jl")
 
-    include("system.jl")
-
-    include("show.jl")
+    include("polynomial_system.jl")
 end # module

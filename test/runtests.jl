@@ -7,7 +7,10 @@ using StaticArrays
 using Test
 using LinearAlgebra
 
-include("codegen_tests.jl")
-include("basic_tests.jl")
-include("gradient_tests.jl")
-include("evaluation_tests.jl")
+
+@testset "StaticPolynomials" begin
+    include("codegen_tests.jl")
+    include("basic_tests.jl")
+    include("gradient_tests.jl")
+    include("system_evaluation_tests.jl")
+end

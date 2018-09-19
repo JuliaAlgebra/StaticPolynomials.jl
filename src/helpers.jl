@@ -49,3 +49,11 @@ function pow(x::Number, p::Integer)
     end
     return y
 end
+
+"""
+    diffvars(variables, parameters)
+
+Remove `parameters` from `variables`. Deals with the case that `parameters` is `nothing`.
+"""
+diffvars(variables, parameters) = setdiff(variables, parameters)
+diffvars(variables, ::Nothing) = variables
