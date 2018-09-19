@@ -1,4 +1,4 @@
-export Polynomial, coefficients, exponents, nvariables, coefficienttype, scale_coefficients!
+export Polynomial, coefficients, exponents, nvariables, variables, parameters, coefficienttype, scale_coefficients!
 
 
 """
@@ -29,8 +29,6 @@ end
 function Polynomial(p::MP.AbstractPolynomialLike; parameters=nothing, variables=diffvars(MP.variables(p), parameters))
     Polynomial(p, variables, parameters)
 end
-diffvars(variables, parameters) = setdiff(variables, parameters)
-diffvars(variables, ::Nothing) = variables
 
 Polynomial(p::MP.AbstractPolynomialLike, vars) = Polynomial(p, vars, nothing)
 @deprecate Polynomial(p, vars) Polynomial(p, variables=vars)
@@ -41,8 +39,8 @@ function Polynomial(p::MP.AbstractPolynomialLike, vars, params)
     nvars = length(vars)
     nparams = params === nothing ? 0 : length(params)
 
-    if MP.nvariables(p) ≠ (nvars + nparams)
-        error("Number of variables doesn't match the number of declared variables and parameters.")
+    if MP.nvariables(p) > (nvars + nparams)
+        error("Number of variables is less than the number of declared variables and parameters.")
     end
 
     coefficients = MP.coefficient.(MP.terms(p))
@@ -119,11 +117,25 @@ parameter_exponents(::Polynomial{T, E, Nothing}) where {T, E} = nothing
 sexponents(::Polynomial{T, E}) where {T, E} = E
 
 """
+    variables(f::Polynomial)::Vector{Symbol}
+
+Returns the variables of `f`.
+"""
+variables(f::Polynomial) = f.variables
+
+"""
+    parameters(f::Polynomial)::Union{Nothing, Vector{Symbol}}
+
+Returns the parameters of `f`.
+"""
+parameters(f::Polynomial) = f.parameters
+
+"""
     nvariables(f::Polynomial)
 
 Return the number of variables `f`.
 """
-nvariables(::Polynomial{T, E}) where {T, E} = size(E, 1)
+nvariables(::Polynomial{T, E}) where {T, E} = size(E)[1]
 
 """
     coefficienttype(f::Polynomial)

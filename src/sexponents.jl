@@ -24,7 +24,7 @@ function Base.:(==)(f::SExponents{N}, g::SExponents{N}) where {N}
 end
 Base.hash(f::SExponents, h) = hash(f.exponents, hash(f.size, h))
 Base.size(SE::SExponents) = SE.size
-Base.size(SE::SExponents, i) = size(SE.size, i)
+Base.size(SE::SExponents, i) = size(SE)[1]
 
 """
     exponents(::SExponents)

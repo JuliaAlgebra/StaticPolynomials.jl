@@ -9,7 +9,7 @@ Evaluate the polynomial `f` at `x`.
 
 Evaluate `f` at `x` with parameters `p`.
 """
-@generated function evaluate(f::Polynomial{T, E, Nothing}, x::AbstractVector) where {T, E, P}
+@generated function evaluate(f::Polynomial{T, E, Nothing}, x::AbstractVector) where {T, E}
     evaluate_impl(f)
 end
 
@@ -29,7 +29,7 @@ function evaluate_impl(f::Type{Polynomial{T, E, P}}) where {T, E, P}
 
     quote
         Base.@_propagate_inbounds_meta
-        @boundscheck length(x) ≥ $(size(E,1))
+        @boundscheck length(x) ≥ $(size(E)[1])
         c = coefficients(f)
         @inbounds out = begin
             $(generate_evaluate(exponents(P, E), T, access))
@@ -150,7 +150,7 @@ function _val_gradient_impl(f::Type{Polynomial{T, E, P}}) where {T, E, P}
     end
     quote
         Base.@_propagate_inbounds_meta
-        @boundscheck length(x) ≥ $(size(E, 1))
+        @boundscheck length(x) ≥ $(size(E)[1])
         c = coefficients(f)
         @inbounds val, grad = begin
             $(generate_gradient(exponents(E), exponents(P), T, access))

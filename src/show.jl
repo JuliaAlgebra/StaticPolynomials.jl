@@ -1,10 +1,3 @@
-# function Base.show(io::IO, p::AbstractSystem{T, N, M}) where {T,N,M}
-#     println(io, "System of $N polynomials in $M variables with coefficients in $T:")
-#     for fieldname in fieldnames(typeof(p))
-#         println(io, "\t$(getfield(p, fieldname))")
-#     end
-# end
-
 function Base.show(io::IO, p::Polynomial{T}) where {T}
     first = true
     cfs = coefficients(p)
