@@ -26,7 +26,7 @@ convert it then into a `StaticPolynomials.Polynomial` for further computations.
 ## Usage
 
 ```julia
-julia> import DynamicPolynomials: @polyvar; using StaticPolynomials: gradient;
+julia> import DynamicPolynomials: @polyvar; using StaticPolynomials;
 
 julia> @polyvar x y;
 

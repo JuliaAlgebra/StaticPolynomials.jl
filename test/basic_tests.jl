@@ -116,7 +116,7 @@
     end
 
 
-    @testset "system evaluation" begin
+    @testset "System evaluation and Jacobian" begin
         @polyvar x y
         f1 = x^2+y^2
         f2 = 2x^2+4y^2+3x*y^4+1
@@ -132,6 +132,15 @@
         w = SVector{2}(w)
         @test evaluate(G, w) isa SVector{2}
         @test [evaluate(g1, w), evaluate(g2, w)] ≈ evaluate(G, w)
+
+        @test jacobian(G, [2, 3]) == [4 6; 251 672]
+        U = zeros(Int, 2, 2)
+        @test jacobian!(U, G, [2, 3]) == [4 6; 251 672] == U
+        u = zeros(Int, 2)
+        U .= 0
+        evaluate_and_jacobian!(u, U, G, [2, 3])
+        @test U == jacobian(G, [2, 3])
+        @test u == G([2, 3])
 
         @polyvar x y a b
 
