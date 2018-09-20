@@ -184,13 +184,11 @@ function differentiate_parameters!(u::AbstractVector, f::Polynomial, x::Abstract
     u
 end
 
-@propagate_inbounds _differentiate_parameters(f, x, p) = _val_differentiate_parameters(f, x, p)[2]
-
-@generated function _val_differentiate_parameters(f::Polynomial, x::AbstractVector, p)
-    _val_differentiate_parameters_impl(f)
+@generated function _differentiate_parameters(f::Polynomial, x::AbstractVector, p)
+    _differentiate_parameters_impl(f)
 end
 
-function _val_differentiate_parameters_impl(f::Type{Polynomial{T, E, P}}) where {T, E, P}
+function _differentiate_parameters_impl(f::Type{Polynomial{T, E, P}}) where {T, E, P}
     @assert P != Nothing
 
     # The role of E and P is interchanged
@@ -202,9 +200,6 @@ function _val_differentiate_parameters_impl(f::Type{Polynomial{T, E, P}}) where 
         @boundscheck length(x) ≥ $(size(E, 1))
         @boundscheck length(p) ≥ $(size(P, 1))
         c = coefficients(f)
-        @inbounds val, grad = begin
-            $(generate_gradient(exponents(E), exponents(P), T, access_input; for_parameters=true))
-        end
-        val, grad
+        $(generate_differentiate_parameters(exponents(E), exponents(P), T, access_input))
     end
 end

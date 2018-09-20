@@ -5,24 +5,12 @@ Generate the statements for the evaluation of the polynomial with exponents `E`
 and paramter exponents `P`.
 This assumes that `E` and `P` are in reverse lexicographic order.
 """
-function generate_gradient(E, P, ::Type{T}, access_input; for_parameters=false) where T
+function generate_gradient(E, P, ::Type{T}, access_input) where T
     nvars = size(E,1)
     if P !== nothing
         nvars += size(P, 1)
     end
-
-    if for_parameters
-        # E and P are sorted with respect to [P; E] but since we want to derivate wrt
-        # the paramters we habe to reorder them
-        p = revlexicographic_cols_perm([E; P])
-        coeffperm = p
-        E = E[:, p]
-        P = P[:, p]
-        # we can derivate wrt the parameters by changing the roles
-        E, P = P, E
-    else
-        coeffperm = 1:size(E, 2)
-    end
+    coeffperm = 1:size(E, 2)
 
     exprs = []
     # dvals is a list of tuples (s, iszero) where s is a symbol or expression
@@ -165,4 +153,53 @@ function coefficients_with_parameters!(exprs, E, P, ::Type{T}, nterm, coeffperm,
         last = j
     end
     coeffs, E_filtered
+end
+
+function generate_differentiate_parameters(E, P, ::Type{T}, access_input) where T
+    @assert P !== nothing
+    nvars = size(E,1) + size(P, 1)
+
+    # E and P are sorted with respect to [P; E] but since we want to derivate wrt
+    # the parameters we habe to reorder them
+    p = revlexicographic_cols_perm([E; P])
+    E = E[:, p]
+    P = P[:, p]
+    coeffperm = p
+    # Since we are only interested in the derivative we can by hand eliminate all
+    # terms where no parameter occurs (these are constant terms in our new setting)
+    # Since we have a revlexicographic order of the columns, the all 0 column
+    # is the leading columns
+
+    # We first handle the case that P is all 0. Then the derivative is simply
+    # the zero vector
+    if all(iszero, P)
+        zero_tuple = Expr(:tuple, (:(zero($T)) for _=1:size(P,1))...)
+        return quote
+            SVector($zero_tuple)
+        end
+    end
+
+    if all(iszero, P[:, 1]) == 0 # we have at least one constant term
+        nconstants = 1
+        while nconstants < size(P,2)
+            if P[1, nconstants + 1] == 0
+                nconstants += 1
+            end
+        end
+        E = E[:,nconstants+1:end]
+        P = P[:,nconstants+1:end]
+        coeffperm = coeffperm[nconstants+1:end]
+    end
+    # we can derivate wrt the parameters by changing the roles
+    E, P = P, E
+
+    exprs = []
+    # dvals is a list of tuples (s, iszero) where s is a symbol or expression
+    # representing the partial derivative and iszero a boolean flag
+    # indicating whether s is zero.
+    _, dvals = partial_derivatives!(exprs, E, P, T, nvars, 1, coeffperm, access_input)
+    quote
+        $(exprs...)
+        SVector($(Expr(:tuple, map(first, dvals)...)))
+    end
 end
