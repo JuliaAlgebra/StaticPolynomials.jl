@@ -116,7 +116,7 @@
     end
 
 
-    @testset "system evaluation" begin
+    @testset "System evaluation and Jacobian" begin
         @polyvar x y
         f1 = x^2+y^2
         f2 = 2x^2+4y^2+3x*y^4+1
@@ -133,6 +133,15 @@
         @test evaluate(G, w) isa SVector{2}
         @test [evaluate(g1, w), evaluate(g2, w)] ≈ evaluate(G, w)
 
+        @test jacobian(G, [2, 3]) == [4 6; 251 672]
+        U = zeros(Int, 2, 2)
+        @test jacobian!(U, G, [2, 3]) == [4 6; 251 672] == U
+        u = zeros(Int, 2)
+        U .= 0
+        evaluate_and_jacobian!(u, U, G, [2, 3])
+        @test U == jacobian(G, [2, 3])
+        @test u == G([2, 3])
+
         @polyvar x y a b
 
         F = PolynomialSystem(x^2+x*y+a+a*x, x+y+b, parameters=[a, b])
@@ -141,7 +150,10 @@
         @test jacobian(F, [0, 0], [3, 2]) == [3 0; 1 1]
 
         @test parameters(F) == [:a, :b]
+        @test nparameters(F) == 2
         @test variables(F) == [:x, :y]
+        @test nvariables(F) == 2
+        @test F isa PolynomialSystem{2, 2, 2}
 
         @polyvar x y z a b
         f = 2x^2+4a*y^2+(a^2+b^4+a+b+1)*3x*y^4+1+a*z+b-2x*b^6
@@ -149,6 +161,11 @@
 
         F = PolynomialSystem(f, g, parameters=[a, b])
         differentiate_parameters(F, [2, 3, -3], [4, -2]) == [4407 -14297; 1 3]
+        differentiate_parameters(F, [2, 3, -3], @SVector([4, -2])) == [4407 -14297; 1 3]
+        @test differentiate_parameters(F, [2, 3, -3], @SVector([4, -2])) isa SMatrix{2, 2, Int, 4}
+        U = zeros(Int, 2, 2)
+        differentiate_parameters!(U, F, [2, 3, -3], [4, -2])
+        @test U == [4407 -14297; 1 3]
     end
 
     @testset "foreach" begin
