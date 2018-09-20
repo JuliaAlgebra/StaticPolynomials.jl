@@ -11,16 +11,19 @@ coefficienttype(::Polynomial)
 scale_coefficients!(::Polynomial, λ)
 evaluate(::Polynomial, ::AbstractVector)
 gradient(::Polynomial, ::AbstractVector)
+gradient(::Polynomial, ::AbstractVector, ::Any)
 gradient!(::AbstractVector, ::Polynomial, ::AbstractVector)
+gradient!(::AbstractVector, ::Polynomial, ::AbstractVector, ::Any)
 evaluate_and_gradient
 evaluate_and_gradient!
+differentiate_parameters
+differentiate_parameters!
 ```
 
 ## Systems of Polynomials
 
 ```@docs
-AbstractSystem
-system
+PolynomialSystem
 nvariables(::AbstractSystem)
 npolynomials(::AbstractSystem)
 coefficienttype(::AbstractSystem)

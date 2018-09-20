@@ -57,3 +57,17 @@ Remove `parameters` from `variables`. Deals with the case that `parameters` is `
 """
 diffvars(variables, parameters) = setdiff(variables, parameters)
 diffvars(variables, ::Nothing) = variables
+
+
+# Implementation from Base.sort adapted to also reorder an associated vector
+"""
+    revlexicographic_cols_perm(A, v)
+
+Sorts the columns of `A` in reverse lexicographic order and returns the permutation vector
+to obtain this ordering.
+"""
+function revlexicographic_cols_perm(A::AbstractMatrix; kws...)
+    inds = axes(A,2)
+    cols = map(i -> (@view A[end:-1:1, i]), inds)
+    sortperm(cols; kws...)
+end

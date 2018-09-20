@@ -242,3 +242,38 @@ end
         val, jac
     end
 end
+
+
+#####################
+# Parameter Jacobian
+#####################
+
+@propagate_inbounds differentiate_parameters!(U, F::PolynomialSystem, x::AbstractVector, p) = _differentiate_parameters!(U, F, x, p)
+
+@generated function _differentiate_parameters!(U, F::PolynomialSystem{N, NVars, T}, x...) where {N, NVars, T}
+    quote
+        Base.@_propagate_inbounds_meta
+        $(map(1:N) do i
+            quote
+                $∇ = _gradient(F.polys[$i], x...)
+                for j=1:$NVars
+                    U[$i, j] = ∇[j]
+                end
+            end
+        end...)
+        U
+    end
+end
+
+@propagate_inbounds differentiate_parameters(F::PolynomialSystem, x, p) = Matrix(_differentiate_parameters(F, x, p))
+@propagate_inbounds differentiate_parameters(F::PolynomialSystem, x::SVector, p) = _differentiate_parameters(F, x, p)
+
+@generated function _differentiate_parameters(F::PolynomialSystem{N}, x, p) where {N}
+    ∇ = [Symbol("∇", i) for i=1:N]
+    quote
+        $((:($(∇[i]) = _differentiate_parameters(F.polys[$i], x, p)) for i=1:N)...)
+        assemble_matrix(SVector(
+            $(Expr(:tuple, (∇[i] for i=1:N)...))
+        ))
+    end
+end
