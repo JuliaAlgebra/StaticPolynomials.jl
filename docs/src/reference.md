@@ -16,8 +16,8 @@ gradient!(::AbstractVector, ::Polynomial, ::AbstractVector)
 gradient!(::AbstractVector, ::Polynomial, ::AbstractVector, ::Any)
 evaluate_and_gradient
 evaluate_and_gradient!
-gradient_parameters
-gradient_parameters!
+differentiate_parameters
+differentiate_parameters!
 ```
 
 ## Systems of Polynomials

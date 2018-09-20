@@ -62,7 +62,7 @@
         @test g(w, p) == f_wp
         @test gradient(g, w,p) == ∇_wp
         @test evaluate_and_gradient(g, w, p) == (f_wp, ∇_wp)
-        @test gradient_parameters(g, w, p) == ∇p_wp
+        @test differentiate_parameters(g, w, p) == ∇p_wp
 
         u = zeros(Int, 3)
         gradient!(u, g, w, p)
@@ -72,7 +72,7 @@
         @test u == ∇_wp
 
         v = zeros(Int, 2)
-        gradient_parameters!(v, g, w, p)
+        differentiate_parameters!(v, g, w, p)
         @test v == ∇p_wp
     end
 
@@ -142,6 +142,13 @@
 
         @test parameters(F) == [:a, :b]
         @test variables(F) == [:x, :y]
+
+        @polyvar x y z a b
+        f = 2x^2+4a*y^2+(a^2+b^4+a+b+1)*3x*y^4+1+a*z+b-2x*b^6
+        g = (x^2+z)*(x+b*y+a)
+
+        F = PolynomialSystem(f, g, parameters=[a, b])
+        differentiate_parameters(F, [2, 3, -3], [4, -2]) == [4407 -14297; 1 3]
     end
 
     @testset "foreach" begin
