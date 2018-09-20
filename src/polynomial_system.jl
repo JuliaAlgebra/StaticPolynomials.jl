@@ -170,7 +170,7 @@ end
         Base.@_propagate_inbounds_meta
         $(map(1:N) do i
             quote
-                $∇ = _gradient(F.polys[$i], x...)
+                ∇ = _gradient(F.polys[$i], x...)
                 for j=1:$NVars
                     U[$i, j] = ∇[j]
                 end
