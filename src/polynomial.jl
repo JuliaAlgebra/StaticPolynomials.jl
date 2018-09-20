@@ -1,4 +1,4 @@
-export Polynomial, coefficients, exponents, nvariables, variables, parameters, coefficienttype, scale_coefficients!
+export Polynomial, coefficients, exponents, nvariables, variables, parameters, nparameters, coefficienttype, scale_coefficients!
 
 
 """
@@ -96,7 +96,7 @@ exponents(::Polynomial{T, E}) where {T, E} = exponents(E)
     parameter_exponents(f)::Union{Nothing, Matrix{Int}}
 
 Return the exponents of the parameters of `f` as an matrix where each column represents
-the exponents of a monomial. If `f` has no paramters `nothing` is returned.
+the exponents of a monomial. If `f` has no parameters `nothing` is returned.
 """
 parameter_exponents(::Polynomial{T, E, P}) where {T, E, P} = exponents(P)
 parameter_exponents(::Polynomial{T, E, Nothing}) where {T, E} = nothing
@@ -120,9 +120,16 @@ parameters(f::Polynomial) = f.parameters
 """
     nvariables(f::Polynomial)
 
-Return the number of variables `f`.
+Return the number of variables of `f`.
 """
 nvariables(::Polynomial{T, E}) where {T, E} = size(E)[1]
+
+"""
+    nparameters(f::Polynomial)
+
+Return the number of parameters of `f`.
+"""
+nparameters(f::Polynomial) = f.parameters === nothing ? 0 : length(f.parameters)
 
 """
     coefficienttype(f::Polynomial)

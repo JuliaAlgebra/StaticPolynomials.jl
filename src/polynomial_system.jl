@@ -3,9 +3,9 @@ export PolynomialSystem, evaluate!, jacobian!, jacobian, evaluate_and_jacobian!,
 import Base: @propagate_inbounds
 
 """
-    PolynomialSystem{N, NVars, <:Tuple}
+    PolynomialSystem{N, NVars, NParams, <:Tuple}
 
-A polynomial system of `N` polynomials in `NVars` variables.
+A polynomial system of `N` polynomials in `NVars` variables with `NParams` variables.
 
 Constructors:
 
@@ -29,7 +29,7 @@ PolynomialSystem{3, 2}:
 
 ```
 """
-struct PolynomialSystem{N, NVars, PolyTuple<:Tuple}
+struct PolynomialSystem{N, NVars, NParams, PolyTuple<:Tuple}
     polys::PolyTuple
 end
 
@@ -43,7 +43,8 @@ end
 function PolynomialSystem(polys::Polynomial...)
     N = length(polys)
     NVars = nvariables(polys[1])
-    PolynomialSystem{N, NVars, typeof(polys)}(polys)
+    NParams = nparameters(polys[1])
+    PolynomialSystem{N, NVars, NParams, typeof(polys)}(polys)
 end
 
 @deprecate system(polys::AbstractVector{<:MP.AbstractPolynomial}) PolynomialSystem(polys)
@@ -81,6 +82,13 @@ The number of variables of the system `F`.
 nvariables(F::PolynomialSystem{N, NVars}) where {N, NVars} = NVars
 
 """
+    nparameters(F::AbstractSystem)
+
+The number of parameters of the system `F`.
+"""
+nparameters(F::PolynomialSystem{N, NVars, NParams}) where {N, NVars, NParams} = NParams
+
+"""
     foreach(f, F::AbstractSystem)
 
 Iterate over the polynomials of `F` and apply `f` to each polynomial.
@@ -106,13 +114,13 @@ have length `M`.
 end
 
 
-function Base.show(io::IO, p::PolynomialSystem{N, NVars}) where {N, NVars}
-    print(io, "PolynomialSystem{$N, $NVars}:")
+function Base.show(io::IO, p::PolynomialSystem{N, NVars, NParams}) where {N, NVars, NParams}
+    print(io, "PolynomialSystem{$N, $NVars, $NParams}:")
     foreach(pi -> println(io, "\n", " ", pi), p)
 end
 
-function Base.print(io::IO, p::PolynomialSystem{N, NVars}) where {N, NVars}
-    print(io, "PolynomialSystem{$N, $NVars}(")
+function Base.print(io::IO, p::PolynomialSystem{N, NVars}) where {N, NVars, NParams}
+    print(io, "PolynomialSystem{$N, $NVars, $NParams}(")
     foreach(pi -> print(io, pi, ", "), p)
     print(")")
 end
@@ -141,7 +149,7 @@ end
 @propagate_inbounds evaluate!(u, F::PolynomialSystem, x::AbstractVector) = _evaluate!(u, F, x)
 @propagate_inbounds evaluate!(u, F::PolynomialSystem, x::AbstractVector, p) = _evaluate!(u, F, x, p)
 
-@generated function _evaluate!(u, F::PolynomialSystem{N, NVars, T}, x...) where {N, NVars, T}
+@generated function _evaluate!(u, F::PolynomialSystem{N}, x...) where {N}
     quote
         Base.@_propagate_inbounds_meta
         $((:(u[$i] = evaluate(F.polys[$i], x...)) for i=1:N)...)
@@ -157,7 +165,7 @@ end
 @propagate_inbounds jacobian!(U, F::PolynomialSystem, x::AbstractVector) = _jacobian!(U, F, x)
 @propagate_inbounds jacobian!(U, F::PolynomialSystem, x::AbstractVector, p) = _jacobian!(U, F, x, p)
 
-@generated function _jacobian!(U, F::PolynomialSystem{N, NVars, T}, x...) where {N, NVars, T}
+@generated function _jacobian!(U, F::PolynomialSystem{N, NVars}, x...) where {N, NVars}
     quote
         Base.@_propagate_inbounds_meta
         $(map(1:N) do i
@@ -203,7 +211,7 @@ end
 @propagate_inbounds evaluate_and_jacobian!(u, U, F::PolynomialSystem, x::AbstractVector) = _evaluate_and_jacobian!(u, U, F, x)
 @propagate_inbounds evaluate_and_jacobian!(u, U, F::PolynomialSystem, x::AbstractVector, p) = _evaluate_and_jacobian!(u, U, F, x, p)
 
-@generated function _evaluate_and_jacobian!(u, U, F::PolynomialSystem{N, NVars, T}, x...) where {N, NVars, T}
+@generated function _evaluate_and_jacobian!(u, U, F::PolynomialSystem{N, NVars}, x...) where {N, NVars}
     quote
         Base.@_propagate_inbounds_meta
         $(map(1:N) do i
@@ -250,13 +258,13 @@ end
 
 @propagate_inbounds differentiate_parameters!(U, F::PolynomialSystem, x::AbstractVector, p) = _differentiate_parameters!(U, F, x, p)
 
-@generated function _differentiate_parameters!(U, F::PolynomialSystem{N, NVars, T}, x...) where {N, NVars, T}
+@generated function _differentiate_parameters!(U, F::PolynomialSystem{N, NVars, NParams}, x, p) where {N, NVars, NParams}
     quote
         Base.@_propagate_inbounds_meta
         $(map(1:N) do i
             quote
-                $∇ = _gradient(F.polys[$i], x...)
-                for j=1:$NVars
+                ∇ = _differentiate_parameters(F.polys[$i], x, p)
+                for j=1:$NParams
                     U[$i, j] = ∇[j]
                 end
             end
@@ -266,7 +274,7 @@ end
 end
 
 @propagate_inbounds differentiate_parameters(F::PolynomialSystem, x, p) = Matrix(_differentiate_parameters(F, x, p))
-@propagate_inbounds differentiate_parameters(F::PolynomialSystem, x::SVector, p) = _differentiate_parameters(F, x, p)
+@propagate_inbounds differentiate_parameters(F::PolynomialSystem, x, p::SVector) = _differentiate_parameters(F, x, p)
 
 @generated function _differentiate_parameters(F::PolynomialSystem{N}, x, p) where {N}
     ∇ = [Symbol("∇", i) for i=1:N]
