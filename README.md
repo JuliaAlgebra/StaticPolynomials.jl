@@ -24,7 +24,7 @@ It is recommended to construct a polynomial with an implementation of
 [DynamicPolynomials.jl](https://github.com/blegat/DynamicPolynomials.jl), and to
 convert them into a `StaticPolynomials.Polynomial` for the evaluations.
 
-## Benchmark
+## Performance
 
 StaticPolynomials is substantially faster than automatic differentiation packages like [ForwardDiff](https://github.com/JuliaDiff/ForwardDiff.jl),
 also works for complex polynomials and often outperforms hand tuned gradients.
