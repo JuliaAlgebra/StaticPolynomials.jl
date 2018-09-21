@@ -4,23 +4,25 @@ export evaluate, gradient, gradient!,
 
 import Base: @propagate_inbounds
 
-
-"""
-    evaluate(f::Polynomial, x)
-
-Evaluate the polynomial `f` at `x`.
-
-    evaluate(f::Polynomial, x, p)
-
-Evaluate `f` at `x` with parameters `p`.
-"""
 @generated function evaluate(f::Polynomial{T, E, Nothing}, x::AbstractVector) where {T, E}
     evaluate_impl(f)
 end
-
 @generated function evaluate(f::Polynomial{T, E, P}, x::AbstractVector, p) where {T, E, P}
     evaluate_impl(f)
 end
+
+@doc """
+    evaluate(f::Polynomial, x)
+
+Evaluate the polynomial `f` at `x`.
+""" evaluate(f::Polynomial, x)
+
+@doc """
+    evaluate(f::Polynomial, x, p)
+
+Evaluate `f` at `x` with parameters `p`.
+"""  evaluate(f::Polynomial, x, p)
+
 (f::Polynomial)(x::AbstractVector) = evaluate(f, x)
 (f::Polynomial)(x::AbstractVector, p) = evaluate(f, x, p)
 
@@ -43,22 +45,24 @@ function evaluate_impl(f::Type{Polynomial{T, E, P}}) where {T, E, P}
     end
 end
 
-"""
+@doc """
     gradient(f::Polynomial, x)
 
 Evaluate the gradient of the polynomial `f` at `x`.
-
-    gradient(f::Polynomial, x, p)
-
-Evaluate the gradient of the polynomial `f` at `x` with parameters `p`.
 """
 function gradient(f::Polynomial{T, E, Nothing}, x::AbstractVector) where {T, E}
     Vector(_gradient(f, x))
 end
-gradient(f::Polynomial, x::AbstractVector, p) = Vector(_gradient(f, x, p))
 function gradient(f::Polynomial{T, E, Nothing}, x::SVector) where {T, E}
     _gradient(f, x)
 end
+
+"""
+    gradient(f::Polynomial, x, p)
+
+Evaluate the gradient of the polynomial `f` at `x` with parameters `p`.
+"""
+gradient(f::Polynomial, x::AbstractVector, p) = Vector(_gradient(f, x, p))
 gradient(f::Polynomial, x::SVector, p) = _gradient(f, x, p)
 
 
@@ -165,21 +169,21 @@ function _val_gradient_impl(f::Type{Polynomial{T, E, P}}) where {T, E, P}
 end
 
 
-"""
+@doc """
     differentiate_parameters(f::Polynomial, x, p)
 
 Evaluate the gradient of the polynomial `f` w.r.t. the parameters at `x` with parameters `p`.
 """
-differentiate_parameters(f::Polynomial, x::AbstractVector, p) = Vector(_differentiate_parameters(f, x, p))
+differentiate_parameters(f::Polynomial, x, p) = Vector(_differentiate_parameters(f, x, p))
 differentiate_parameters(f::Polynomial, x::SVector, p) = _differentiate_parameters(f, x, p)
 
 
-"""
+@doc """
     differentiate_parameters!(u, f::Polynomial, x, p)
 
 Evaluate the gradient of the polynomial `f` w.r.t. the parameters at `x` with parameters `p` and store the result in `u`.
 """
-function differentiate_parameters!(u::AbstractVector, f::Polynomial, x::AbstractVector, p)
+function differentiate_parameters!(u, f::Polynomial, x, p)
     u .= _differentiate_parameters(f, x, p)
     u
 end
