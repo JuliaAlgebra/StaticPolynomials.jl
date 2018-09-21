@@ -74,6 +74,13 @@
         v = zeros(Int, 2)
         differentiate_parameters!(v, g, w, p)
         @test v == ∇p_wp
+
+
+        f = Polynomial(a + b + x + y, parameters=[a, b])
+        @test differentiate_parameters(f, [0, 0], [1, 1]) == [1, 1]
+
+        f = Polynomial(x*y + x + y, parameters=[a, b])
+        @test differentiate_parameters(f, [0, 0], [1, 1]) == [0, 0]
     end
 
     @testset "show" begin
