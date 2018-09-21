@@ -1,4 +1,7 @@
-export PolynomialSystem, evaluate!, jacobian!, jacobian, evaluate_and_jacobian!, evaluate_and_jacobian
+export PolynomialSystem, npolynomials,
+    evaluate!,
+    jacobian!, jacobian, evaluate_and_jacobian!, evaluate_and_jacobian,
+    differentiate_parameters, differentiate_parameters!
 
 import Base: @propagate_inbounds
 
@@ -140,12 +143,21 @@ end
     end
 end
 
+@doc """
+     evaluate(F::PolynomialSystem, x)
+
+Evaluate the polynomial system `F` at `x`.
+""" evaluate(F::PolynomialSystem, x)
+
+@doc """
+     evaluate(F::PolynomialSystem, x, p)
+
+Evaluate the polynomial system `F` at `x` with parameters `p`.
+""" evaluate(F::PolynomialSystem, x, p)
+
 (F::PolynomialSystem)(x) = evaluate(F, x)
 (F::PolynomialSystem)(x, p) = evaluate(F, x, p)
 
-"""
-     evaluate!(u, F::PolynomialSystem, x::AbstractVector, [p])
-"""
 @propagate_inbounds evaluate!(u, F::PolynomialSystem, x::AbstractVector) = _evaluate!(u, F, x)
 @propagate_inbounds evaluate!(u, F::PolynomialSystem, x::AbstractVector, p) = _evaluate!(u, F, x, p)
 
@@ -157,7 +169,17 @@ end
     end
 end
 
+@doc """
+     evaluate!(u, F::PolynomialSystem, x)
 
+Evaluate the polynomial system `F` at `x` and store its result in `u`.
+""" evaluate!(u, F::PolynomialSystem, x)
+
+@doc """
+     evaluate!(u, F::PolynomialSystem, x, p)
+
+Evaluate the polynomial system `F` at `x` with parameters `p` and store its result in `u`.
+""" evaluate!(u, F::PolynomialSystem, x, p)
 
 ############
 # JACOBIAN
@@ -179,6 +201,21 @@ end
         U
     end
 end
+
+@doc """
+     jacobian!(U, F::PolynomialSystem, x)
+
+Evaluate the Jacobian of the polynomial system `F` at `x`
+and store its result in `U`.
+""" jacobian!(U, F::PolynomialSystem, x)
+
+@doc """
+     jacobian(U, F::PolynomialSystem, x, p)
+
+Evaluate the Jacobian of the polynomial system `F` at `x` with parameters `p`
+and store its result in `U`.
+""" jacobian!(U, F::PolynomialSystem, x, p)
+
 
 @propagate_inbounds jacobian(F::PolynomialSystem, x) = Matrix(_jacobian(F, x))
 @propagate_inbounds jacobian(F::PolynomialSystem, x, p) = Matrix(_jacobian(F, x, p))
@@ -203,6 +240,17 @@ end
     end
 end
 
+@doc """
+     jacobian(F::PolynomialSystem, x)
+
+Evaluate the Jacobian of the polynomial system `F` at `x`.
+""" jacobian(F::PolynomialSystem, x)
+
+@doc """
+     jacobian(F::PolynomialSystem, x, p)
+
+Evaluate the Jacobian of the polynomial system `F` at `x` with parameters `p`.
+""" jacobian(F::PolynomialSystem, x, p)
 
 ########################
 # Evaluate and Jacobian
@@ -226,6 +274,18 @@ end
         nothing
     end
 end
+
+@doc """
+    evaluate_and_jacobian!(u, U, F::PolynomialSystem, x)
+Evaluate the system `F` and its Jacobian at `x` and store the results in `u` (evalution)
+and `U` (Jacobian).
+""" evaluate_and_jacobian!(u, U, F::PolynomialSystem, x)
+
+@doc """
+    evaluate_and_jacobian!(u, U, F::PolynomialSystem, x, p)
+Evaluate the system `F` and its Jacobian at `x` with parameters `p` and
+store the results in `u` (evalution) and `U` (Jacobian).
+""" evaluate_and_jacobian!(u, U, F::PolynomialSystem, x, p)
 
 @propagate_inbounds function evaluate_and_jacobian(F::PolynomialSystem, x)
     val, jac = _evaluate_and_jacobian(F, x)
@@ -251,12 +311,21 @@ end
     end
 end
 
+@doc """
+    evaluate_and_jacobian(F::PolynomialSystem, x)
+Evaluate the system `F` and its Jacobian at `x`.
+""" evaluate_and_jacobian!(F::PolynomialSystem, x)
+
+@doc """
+    evaluate_and_jacobian!(F::PolynomialSystem, x, p)
+Evaluate the system `F` and its Jacobian at `x` with parameters `p`.
+""" evaluate_and_jacobian(F::PolynomialSystem, x, p)
 
 #####################
 # Parameter Jacobian
 #####################
 
-@propagate_inbounds differentiate_parameters!(U, F::PolynomialSystem, x::AbstractVector, p) = _differentiate_parameters!(U, F, x, p)
+@propagate_inbounds differentiate_parameters!(U, F::PolynomialSystem, x, p) = _differentiate_parameters!(U, F, x, p)
 
 @generated function _differentiate_parameters!(U, F::PolynomialSystem{N, NVars, NParams}, x, p) where {N, NVars, NParams}
     quote
@@ -273,6 +342,13 @@ end
     end
 end
 
+@doc """
+     differentiate_parameters!(U, F::PolynomialSystem, x, p)
+
+Evaluate the derivative of the polynomial system `F` at `x` with parameters `p`
+with respect to the parameters and store the result in `U`.
+""" differentiate_parameters!(U, F::PolynomialSystem, x, p)
+
 @propagate_inbounds differentiate_parameters(F::PolynomialSystem, x, p) = Matrix(_differentiate_parameters(F, x, p))
 @propagate_inbounds differentiate_parameters(F::PolynomialSystem, x, p::SVector) = _differentiate_parameters(F, x, p)
 
@@ -285,3 +361,10 @@ end
         ))
     end
 end
+
+@doc """
+     differentiate_parameters(F::PolynomialSystem, x, p)
+
+Evaluate the derivative of the polynomial system `F` at `x` with parameters `p`
+with respect to the parameters and store the result in `U`.
+""" differentiate_parameters(F::PolynomialSystem, x, p)

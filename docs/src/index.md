@@ -20,33 +20,75 @@ convert it then into a `StaticPolynomials.Polynomial` for further computations.
 ## Tutorial
 
 ```julia
-import DynamicPolynomials: @polyvar
-using StaticPolynomials: gradient
+julia> import DynamicPolynomials: @polyvar;
+julia> using StaticPolynomials: gradient;
 
-@polyvar x y
+julia> @polyvar x y a;
 
-julia> f = Polynomial(x^2+3y^2*x+1) # the support of f is encoded in the `Polynomial` type.
-StaticPolynomials.Polynomial{Int64,2,SExponents{4103c6525e885f8b}}()
+julia> f = Polynomial(x^2+3y^2*x+1)
+1 + x² + 3xy²
 
-julia> evaluate(f, [2.0, 3.0])
-59.0
-julia> gradient(f, [2.0, 3.0])
-2-element Array{Float64,1}:
- 31.0
- 36.0
+julia> evaluate(f, [2, 3])
+59
+
+julia> gradient(f, [2, 3])
+2-element Array{Int64,1}:
+ 31
+ 36
+
+# You can also declare certain variables as parameters
+julia> g = Polynomial(x^2+3y^2*x+a^2; parameters=[a])
+a² + x² + 3xy²
+
+julia> evaluate(g, [2, 3], [4])
+74
+julia> gradient(g, [2, 3], [4.0])
+2-element Array{Int64,1}:
+ 31
+ 36
 ```
 
 We also support systems of polynomials.
 
 ```julia
-julia> F = system([x^2+y^2+1, x + y - 5])
-StaticPolynomials.Systems.System2{Int64,2,SExponents{932bae602683cacb},SExponents{44c61f91039334d1}}()
-julia> evaluate(F, [2.0, 3.0])
-2-element Array{Float64,1}:
- 14.0
-  0.0
-julia> jacobian(f, [2.0, 3.0])
-2×2 Array{Float64,2}:
- 4.0  6.0
- 1.0  1.0
+julia> @polyvar x y a b;
+
+julia> F = PolynomialSystem([x^2+y^2+1, x + y - 5])
+PolynomialSystem{2, 2, 0}:
+ 1 + x² + y²
+
+ -5 + x + y
+
+julia> evaluate(F, [2, 3])
+2-element Array{Int64,1}:
+ 14
+  0
+
+julia> jacobian(F, [2, 3])
+2×2 Array{Int64,2}:
+ 4  6
+ 1  1
+
+# You can also declare parameters
+julia> G = PolynomialSystem([x^2+y^2+a^3, b*x + y - 5]; parameters=[a, b])
+PolynomialSystem{2, 2, 2}:
+ a³ + x² + y²
+
+ -5 + xb + y
+
+julia> evaluate(G, [2, 3], [-2, 4])
+2-element Array{Int64,1}:
+  5
+  6
+
+julia> jacobian(G, [2, 3], [-2, 4])
+2×2 Array{Int64,2}:
+  4  6
+  4  1
+
+# You can also differentiate with respect to the parameters
+julia> differentiate_parameters(G, [2, 3], [-2, 4])
+2×2 Array{Int64,2}:
+  12  0
+   0  2
 ```
