@@ -179,11 +179,13 @@ function generate_differentiate_parameters(E, P, ::Type{T}, access_input) where 
         end
     end
 
-    if all(iszero, P[:, 1]) == 0 # we have at least one constant term
+    if all(iszero, @view P[:, 1]) # we have at least one constant term
         nconstants = 1
         while nconstants < size(P,2)
-            if P[1, nconstants + 1] == 0
+            if all(iszero, @view P[:, nconstants + 1])
                 nconstants += 1
+            else
+                break
             end
         end
         E = E[:,nconstants+1:end]
