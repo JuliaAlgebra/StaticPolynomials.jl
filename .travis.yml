@@ -26,9 +26,17 @@ matrix:
 #before_script: # homebrew for mac
 #  - if [ $TRAVIS_OS_NAME = osx ]; then brew install gcc; fi
 
+jobs:
+   include:
+     - stage: "Documentation"
+       julia: 0.7
+       os: linux
+       script:
+         - julia --project=docs/ -e 'using Pkg; Pkg.instantiate(); Pkg.add(PackageSpec(path=pwd()))'
+         - julia --project=docs/ docs/make.jl
+       after_success: skip
+
 ## uncomment the following lines to override the default test script
 after_success:
   # push coverage results to Codecov
   - julia -e 'import Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
-  - julia -e 'import Pkg; Pkg.add("Documenter");'
-  - julia -e 'import StaticPolynomials; include(joinpath(dirname(pathof(StaticPolynomials)), "..", "docs", "make.jl"))'
