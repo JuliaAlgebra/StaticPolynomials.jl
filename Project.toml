@@ -9,6 +9,10 @@ LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MultivariatePolynomials = "102ac46a-7ee4-5c85-9060-abc95bfdeaa3"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
+[compat]
+MultivariatePolynomials = "^0.2"
+StaticArrays = "^0.8.3"
+
 [extras]
 DynamicPolynomials = "7c1d4256-1411-5781-91ec-d7bc3513ac07"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
