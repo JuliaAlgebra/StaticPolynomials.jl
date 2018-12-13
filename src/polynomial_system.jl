@@ -37,7 +37,7 @@ struct PolynomialSystem{N, NVars, NParams, PolyTuple<:Tuple}
 end
 
 function PolynomialSystem(polys::AbstractVector{<:MP.AbstractPolynomial}; parameters=nothing, variables=diffvars(MP.variables(polys), parameters))
-    PolynomialSystem(map(p -> Polynomial(p; variables=variables, parameters=parameters), polys)...)
+    PolynomialSystem(ntuple(i -> Polynomial(polys[i]; variables=variables, parameters=parameters), length(polys))...)
 end
 function PolynomialSystem(polys::MP.AbstractPolynomial...; kwargs...)
     PolynomialSystem(collect(polys); kwargs...)
