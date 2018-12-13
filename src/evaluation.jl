@@ -4,12 +4,6 @@ export evaluate, gradient, gradient!,
 
 import Base: @propagate_inbounds
 
-@generated function evaluate(f::Polynomial{T, E, Nothing}, x::AbstractVector) where {T, E}
-    evaluate_impl(f)
-end
-@generated function evaluate(f::Polynomial{T, E, P}, x::AbstractVector, p) where {T, E, P}
-    evaluate_impl(f)
-end
 
 @doc """
     evaluate(f::Polynomial, x)
@@ -44,6 +38,52 @@ function evaluate_impl(f::Type{Polynomial{T, E, P}}) where {T, E, P}
         out
     end
 end
+
+@generated function evaluate(f::Polynomial{T, E, Nothing}, x::AbstractVector) where {T, E}
+    evaluate_impl(f)
+end
+@generated function evaluate(f::Polynomial{T, E, P}, x::AbstractVector, p) where {T, E, P}
+    evaluate_impl(f)
+end
+
+function _val_gradient_impl(f::Type{Polynomial{T, E, P}}) where {T, E, P}
+    if P == Nothing
+        access_input = x_
+    else
+        n = size(P, 1)
+        access_input(i) = i ≤ n ? :(p[$i]) : :(x[$(i-n)])
+    end
+    quote
+        Base.@_propagate_inbounds_meta
+        @boundscheck length(x) ≥ $(size(E)[1])
+        c = coefficients(f)
+        val, grad = begin
+            $(generate_gradient(exponents(E), exponents(P), T, access_input))
+        end
+        val, grad
+    end
+end
+
+
+@generated function _val_gradient(f::Polynomial{T, E, Nothing}, x::AbstractVector) where {T, E}
+    _val_gradient_impl(f)
+end
+
+@generated function _val_gradient(f::Polynomial, x::AbstractVector, p)
+    _val_gradient_impl(f)
+end
+
+
+@propagate_inbounds @inline function _gradient(f, x)
+    _, grad = _val_gradient(f, x)
+    grad
+end
+
+@propagate_inbounds @inline function _gradient(f, x, p)
+    _, grad = _val_gradient(f, x, p)
+    grad
+end
+
 
 @doc """
     gradient(f::Polynomial, x)
@@ -84,6 +124,7 @@ end
     u
 end
 
+
 """
     evaluate_and_gradient(f::Polynomial, x)
 
@@ -107,8 +148,6 @@ function evaluate_and_gradient(f::Polynomial, x::AbstractVector, p)
     val, Vector(grad)
 end
 
-
-
 """
     evaluate_and_gradient!(u, f::Polynomial, x)
 
@@ -131,41 +170,24 @@ end
     val
 end
 
+function _differentiate_parameters_impl(f::Type{Polynomial{T, E, P}}) where {T, E, P}
+    @assert P != Nothing
 
-@propagate_inbounds @inline function _gradient(f, x)
-    _, grad = _val_gradient(f, x)
-    grad
-end
+    # The role of E and P is interchanged
+    n = size(E, 1)
+    access_input(i) = i ≤ n ? :(x[$i]) : :(p[$(i-n)])
 
-@propagate_inbounds @inline function _gradient(f, x, p)
-    _, grad = _val_gradient(f, x, p)
-    grad
-end
-
-@generated function _val_gradient(f::Polynomial{T, E, Nothing}, x::AbstractVector) where {T, E}
-    _val_gradient_impl(f)
-end
-
-@generated function _val_gradient(f::Polynomial, x::AbstractVector, p)
-    _val_gradient_impl(f)
-end
-
-function _val_gradient_impl(f::Type{Polynomial{T, E, P}}) where {T, E, P}
-    if P == Nothing
-        access_input = x_
-    else
-        n = size(P, 1)
-        access_input(i) = i ≤ n ? :(p[$i]) : :(x[$(i-n)])
-    end
     quote
         Base.@_propagate_inbounds_meta
-        @boundscheck length(x) ≥ $(size(E)[1])
+        @boundscheck length(x) ≥ $(size(E, 1))
+        @boundscheck length(p) ≥ $(size(P, 1))
         c = coefficients(f)
-        val, grad = begin
-            $(generate_gradient(exponents(E), exponents(P), T, access_input))
-        end
-        val, grad
+        $(generate_differentiate_parameters(exponents(E), exponents(P), T, access_input))
     end
+end
+
+@generated function _differentiate_parameters(f::Polynomial, x::AbstractVector, p)
+    _differentiate_parameters_impl(f)
 end
 
 
@@ -186,24 +208,4 @@ Evaluate the gradient of the polynomial `f` w.r.t. the parameters at `x` with pa
 function differentiate_parameters!(u, f::Polynomial, x, p)
     u .= _differentiate_parameters(f, x, p)
     u
-end
-
-@generated function _differentiate_parameters(f::Polynomial, x::AbstractVector, p)
-    _differentiate_parameters_impl(f)
-end
-
-function _differentiate_parameters_impl(f::Type{Polynomial{T, E, P}}) where {T, E, P}
-    @assert P != Nothing
-
-    # The role of E and P is interchanged
-    n = size(E, 1)
-    access_input(i) = i ≤ n ? :(x[$i]) : :(p[$(i-n)])
-
-    quote
-        Base.@_propagate_inbounds_meta
-        @boundscheck length(x) ≥ $(size(E, 1))
-        @boundscheck length(p) ≥ $(size(P, 1))
-        c = coefficients(f)
-        $(generate_differentiate_parameters(exponents(E), exponents(P), T, access_input))
-    end
 end
