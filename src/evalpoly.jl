@@ -11,8 +11,13 @@ function evalpoly(::Type{T}, degrees::AbstractVector, coefficients::AbstractVect
 
     if length(normalized_coeffs) == 1
         return normalized_coeffs[1]
+    elseif length(normalized_coeffs) == 2
+        a, b = normalized_coeffs
+        :(muladd($b, $var, $a))
+    else
+        :(@evalpoly($var, $(normalized_coeffs...)))
     end
-    :(@evalpoly($var, $(normalized_coeffs...)))
+
 end
 
 
