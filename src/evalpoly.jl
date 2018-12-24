@@ -36,9 +36,8 @@ function evalpoly_derivative!(exprs, ::Type{T}, degrees::AbstractVector, coeffic
             @gensym val
             push!(exprs, :($val = $(normalized_coeffs[1])))
         end
-        @gensym dval
-        # TODO: avoid further computations with zero
-        push!(exprs, :($dval = zero($T)))
+        # return zero directly
+        dval = :(zero($T))
     elseif length(normalized_coeffs) == 2
         @gensym val
         a, b = normalized_coeffs
