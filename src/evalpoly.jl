@@ -29,8 +29,30 @@ Evaluate the polynomial and its derivative defined by the degrees and coefficien
 function evalpoly_derivative!(exprs, ::Type{T}, degrees::AbstractVector, coefficients::AbstractVector, var) where T
     normalized_coeffs = normalized_coefficients(T, degrees, coefficients)
 
-    @gensym dval val
-    push!(exprs, :(($val, $dval) = @evalpoly_derivative($var, $(normalized_coeffs...))))
+    if length(normalized_coeffs) == 1
+        if isa(normalized_coeffs[1], Symbol)
+            val = normalized_coeffs[1]
+        else
+            @gensym val
+            push!(exprs, :($val = $(normalized_coeffs[1])))
+        end
+        @gensym dval
+        # TODO: avoid further computations with zero
+        push!(exprs, :($dval = zero($T)))
+    elseif length(normalized_coeffs) == 2
+        @gensym val
+        a, b = normalized_coeffs
+        push!(exprs, :($val = muladd($b, $var, $a)))
+        if isa(b, Symbol)
+            dval = b
+        else
+            @gensym dval
+            push!(exprs, :($dval = $b))
+        end
+    else
+        @gensym dval val
+        push!(exprs, :(($val, $dval) = @evalpoly_derivative($var, $(normalized_coeffs...))))
+    end
 
     return val, dval
 end
