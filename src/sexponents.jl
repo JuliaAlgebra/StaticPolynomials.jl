@@ -17,6 +17,10 @@ function SExponents(exponents::Matrix{<:Integer})
     return SExponents(E, size(exponents))
 end
 
+function SExponents{N}(;exponents::NTuple{N, UInt8}=nothing, size::Tuple{Int, Int}=nothing) where {N}
+    SExponents{N}(exponents, size)
+end
+
 Base.isbits(::Type{<:SExponents}) = true
 Base.length(::SExponents{N}) where N = N
 function Base.:(==)(f::SExponents{N}, g::SExponents{N}) where {N}
