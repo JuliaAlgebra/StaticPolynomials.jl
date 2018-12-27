@@ -28,9 +28,14 @@ function generate_evaluate!(exprs, E, ::Type{T}, nvar, nterm, coeffperm, access_
     degrees, submatrices = degrees_submatrices(E)
     for E_d in submatrices
         coeff_subexpr = generate_evaluate!(exprs, E_d, T, nvar - 1, sub_nterm, coeffperm, access_input)
-        @gensym c
-        push!(exprs, :($c = $coeff_subexpr))
-        push!(coeffs, c)
+        # If the returned value is just a symbol propagate it
+        if isa(coeff_subexpr, Symbol)
+            push!(coeffs, coeff_subexpr)
+        else
+            @gensym c
+            push!(exprs, :($c = $coeff_subexpr))
+            push!(coeffs, c)
+        end
         sub_nterm += size(E_d, 2)
     end
 

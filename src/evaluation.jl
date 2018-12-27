@@ -158,7 +158,6 @@ function _val_gradient_impl(f::Type{Polynomial{T, E, P}}) where {T, E, P}
         access_input(i) = i ≤ n ? :(p[$i]) : :(x[$(i-n)])
     end
     quote
-        Base.@_propagate_inbounds_meta
         @boundscheck length(x) ≥ $(size(E)[1])
         c = coefficients(f)
         val, grad = begin
