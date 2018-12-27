@@ -61,8 +61,8 @@ x = @SVector rand(10)
 @btime $p10($x) # 28.836 ns (0 allocations: 0 bytes)
 
 @btime gradient($p10, $x) # 72.334 ns (0 allocations: 0 bytes)
-cfg = ForwardDiff.GradientConfig(f10, y)
-@btime ForwardDiff.gradient($f10, $y, $cfg) # 550.187 ns (2 allocations: 192 bytes)
+cfg = ForwardDiff.GradientConfig(f10, x)
+@btime ForwardDiff.gradient($f10, $x, $cfg) # 550.187 ns (2 allocations: 192 bytes)
 ```
 
 ## Short introduction
