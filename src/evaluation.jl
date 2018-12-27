@@ -4,11 +4,11 @@ export evaluate, gradient, gradient!,
 
 import Base: @propagate_inbounds
 
-@generated function evaluate(f::Polynomial{T, E, Nothing}, x::AbstractVector{S}) where {T, E, S}
-    evaluate_impl(f, S)
+@generated function evaluate(f::Polynomial{T, E, Nothing}, x::AbstractVector) where {T, E}
+    evaluate_impl(f)
 end
-@generated function evaluate(f::Polynomial{T, E, P}, x::AbstractVector{S}, p) where {T, E, P, S}
-    evaluate_impl(f, S)
+@generated function evaluate(f::Polynomial{T, E, P}, x::AbstractVector, p) where {T, E, P}
+    evaluate_impl(f)
 end
 
 @doc """
@@ -26,7 +26,7 @@ Evaluate `f` at `x` with parameters `p`.
 (f::Polynomial)(x::AbstractVector) = evaluate(f, x)
 (f::Polynomial)(x::AbstractVector, p) = evaluate(f, x, p)
 
-function evaluate_impl(f::Type{Polynomial{T, E, P}}, ::Type{S}) where {T, E, P, S}
+function evaluate_impl(f::Type{Polynomial{T, E, P}}) where {T, E, P}
     if P == Nothing
         access_input = x_
     else
@@ -39,7 +39,7 @@ function evaluate_impl(f::Type{Polynomial{T, E, P}}, ::Type{S}) where {T, E, P, 
         @boundscheck length(x) ≥ $(size(E)[1])
         c = coefficients(f)
         @inbounds out = begin
-            $(generate_evaluate(exponents(P, E), promote_type(T, S), access_input))
+            $(generate_evaluate(exponents(P, E), T, access_input))
         end
         out
     end
@@ -142,15 +142,15 @@ end
     grad
 end
 
-@generated function _val_gradient(f::Polynomial{T, E, Nothing}, x::AbstractVector{S}) where {T, E, S}
-    _val_gradient_impl(f, S)
+@generated function _val_gradient(f::Polynomial{T, E, Nothing}, x::AbstractVector) where {T, E}
+    _val_gradient_impl(f)
 end
 
-@generated function _val_gradient(f::Polynomial, x::AbstractVector{S}, p) where {T, S}
-    _val_gradient_impl(f, S)
+@generated function _val_gradient(f::Polynomial, x::AbstractVector, p)
+    _val_gradient_impl(f)
 end
 
-function _val_gradient_impl(f::Type{Polynomial{T, E, P}}, ::Type{S}) where {T, E, P, S}
+function _val_gradient_impl(f::Type{Polynomial{T, E, P}}) where {T, E, P}
     if P == Nothing
         access_input = x_
     else
@@ -161,7 +161,7 @@ function _val_gradient_impl(f::Type{Polynomial{T, E, P}}, ::Type{S}) where {T, E
         @boundscheck length(x) ≥ $(size(E)[1])
         c = coefficients(f)
         val, grad = begin
-            $(generate_gradient(exponents(E), exponents(P), promote_type(T, S), access_input))
+            $(generate_gradient(exponents(E), exponents(P), T, access_input))
         end
         val, grad
     end
@@ -187,11 +187,11 @@ function differentiate_parameters!(u, f::Polynomial, x, p)
     u
 end
 
-@generated function _differentiate_parameters(f::Polynomial, x::AbstractVector{S}, p) where {S}
-    _differentiate_parameters_impl(f, S)
+@generated function _differentiate_parameters(f::Polynomial, x::AbstractVector, p)
+    _differentiate_parameters_impl(f)
 end
 
-function _differentiate_parameters_impl(f::Type{Polynomial{T, E, P}}, ::Type{S}) where {T, E, P, S}
+function _differentiate_parameters_impl(f::Type{Polynomial{T, E, P}}) where {T, E, P}
     @assert P != Nothing
 
     # The role of E and P is interchanged
@@ -203,6 +203,6 @@ function _differentiate_parameters_impl(f::Type{Polynomial{T, E, P}}, ::Type{S})
         @boundscheck length(x) ≥ $(size(E, 1))
         @boundscheck length(p) ≥ $(size(P, 1))
         c = coefficients(f)
-        $(generate_differentiate_parameters(exponents(E), exponents(P), promote_type(T, S), access_input))
+        $(generate_differentiate_parameters(exponents(E), exponents(P), T, access_input))
     end
 end

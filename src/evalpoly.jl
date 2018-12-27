@@ -50,11 +50,7 @@ function evalpoly_derivative!(exprs, ::Type{T}, degrees::AbstractVector, coeffic
         end
     else
         @gensym dval val
-        if isa(T, Complex)
-            push!(exprs, :(($val, $dval) = @goertzel_deriv($var, $(normalized_coeffs...))))
-        else
-            push!(exprs, :(($val, $dval) = @horner_deriv($var, $(normalized_coeffs...))))
-        end
+        push!(exprs, :(($val, $dval) = @evalpoly_derivative($var, $(normalized_coeffs...))))
     end
 
     return val, dval
