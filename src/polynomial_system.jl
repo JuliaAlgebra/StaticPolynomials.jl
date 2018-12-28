@@ -166,7 +166,6 @@ Evaluate the polynomial system `F` at `x` with parameters `p`.
 
 @generated function _evaluate!(u, F::PolynomialSystem{N}, x...) where {N}
     quote
-        Base.@_propagate_inbounds_meta
         $((:(u[$i] = evaluate(F.polys[$i], x...)) for i=1:N)...)
         u
     end
@@ -191,7 +190,6 @@ Evaluate the polynomial system `F` at `x` with parameters `p` and store its resu
 ###########
 @generated function _jacobian!(U, F::PolynomialSystem{N, NVars}, x...) where {N, NVars}
     quote
-        Base.@_propagate_inbounds_meta
         $(map(1:N) do i
             quote
                 ∇ = _gradient(F.polys[$i], x...)
@@ -262,7 +260,6 @@ Evaluate the Jacobian of the polynomial system `F` at `x` with parameters `p`.
 
 @generated function _evaluate_and_jacobian!(u, U, F::PolynomialSystem{N, NVars}, x...) where {N, NVars}
     quote
-        Base.@_propagate_inbounds_meta
         $(map(1:N) do i
             quote
                 val, ∇ = _val_gradient(F.polys[$i], x...)
@@ -332,7 +329,6 @@ Evaluate the system `F` and its Jacobian at `x` with parameters `p`.
 
 @generated function _differentiate_parameters!(U, F::PolynomialSystem{N, NVars, NParams}, x, p) where {N, NVars, NParams}
     quote
-        Base.@_propagate_inbounds_meta
         $(map(1:N) do i
             quote
                 ∇ = _differentiate_parameters(F.polys[$i], x, p)
