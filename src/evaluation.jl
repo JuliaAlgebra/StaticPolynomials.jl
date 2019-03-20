@@ -28,11 +28,15 @@ function evaluate_impl(f::Type{Polynomial{T, E, P}}) where {T, E, P}
         access_input(i) = i ≤ n ? :(p[$i]) : :(x[$(i-n)])
     end
 
+    boundschecks = [(:@boundscheck length(x) ≥ $(size(E)[1]))]
+    if P != Nothing
+        push!(boundschecks, (:@boundscheck length(p) ≥ $(size(P)[1])))
+    end
+
     quote
-        Base.@_propagate_inbounds_meta
-        @boundscheck length(x) ≥ $(size(E)[1])
+        $(boundschecks...)
         c = coefficients(f)
-        @inbounds out = begin
+        out = @inbounds begin
             $(generate_evaluate(exponents(P, E), T, access_input))
         end
         out
@@ -53,10 +57,15 @@ function _val_gradient_impl(f::Type{Polynomial{T, E, P}}) where {T, E, P}
         n = size(P, 1)
         access_input(i) = i ≤ n ? :(p[$i]) : :(x[$(i-n)])
     end
+    boundschecks = [(:@boundscheck length(x) ≥ $(size(E)[1]))]
+    if P != Nothing
+        push!(boundschecks, :(@boundscheck length(p) ≥ $(size(P)[1])))
+    end
+
     quote
-        @boundscheck length(x) ≥ $(size(E)[1])
+        $(boundschecks...)
         c = coefficients(f)
-        val, grad = begin
+        val, grad = @inbounds begin
             $(generate_gradient(exponents(E), exponents(P), T, access_input))
         end
         val, grad
@@ -180,7 +189,9 @@ function _differentiate_parameters_impl(f::Type{Polynomial{T, E, P}}) where {T, 
         @boundscheck length(x) ≥ $(size(E, 1))
         @boundscheck length(p) ≥ $(size(P, 1))
         c = coefficients(f)
-        $(generate_differentiate_parameters(exponents(E), exponents(P), T, access_input))
+        @inbounds begin
+            $(generate_differentiate_parameters(exponents(E), exponents(P), T, access_input))
+        end
     end
 end
 

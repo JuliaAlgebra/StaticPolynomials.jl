@@ -166,7 +166,10 @@ Evaluate the polynomial system `F` at `x` with parameters `p`.
 
 @generated function _evaluate!(u, F::PolynomialSystem{N}, x...) where {N}
     quote
-        $((:(u[$i] = evaluate(F.polys[$i], x...)) for i=1:N)...)
+        @boundscheck checkbounds(u, 1:$N)
+        @inbounds begin
+            $((:(u[$i] = evaluate(F.polys[$i], x...)) for i=1:N)...)
+        end
         u
     end
 end
@@ -190,14 +193,17 @@ Evaluate the polynomial system `F` at `x` with parameters `p` and store its resu
 ###########
 @generated function _jacobian!(U, F::PolynomialSystem{N, NVars}, x...) where {N, NVars}
     quote
-        $(map(1:N) do i
-            quote
-                ∇ = _gradient(F.polys[$i], x...)
-                for j=1:$NVars
-                    U[$i, j] = ∇[j]
+        @boundscheck checkbounds(U, 1:$N, 1:$NVars)
+        @inbounds begin
+            $(map(1:N) do i
+                quote
+                    ∇ = _gradient(F.polys[$i], x...)
+                    for j=1:$NVars
+                        U[$i, j] = ∇[j]
+                    end
                 end
-            end
-        end...)
+            end...)
+        end
         U
     end
 end
@@ -260,15 +266,20 @@ Evaluate the Jacobian of the polynomial system `F` at `x` with parameters `p`.
 
 @generated function _evaluate_and_jacobian!(u, U, F::PolynomialSystem{N, NVars}, x...) where {N, NVars}
     quote
-        $(map(1:N) do i
-            quote
-                val, ∇ = _val_gradient(F.polys[$i], x...)
-                u[$i] = val
-                for j=1:$NVars
-                    U[$i, j] = ∇[j]
+        @boundscheck checkbounds(u, 1:$N)
+        @boundscheck checkbounds(U, 1:$N, 1:$NVars)
+        
+        @inbounds begin
+            $(map(1:N) do i
+                quote
+                    val, ∇ = _val_gradient(F.polys[$i], x...)
+                    u[$i] = val
+                    for j=1:$NVars
+                        U[$i, j] = ∇[j]
+                    end
                 end
-            end
-        end...)
+            end...)
+        end
         nothing
     end
 end
@@ -329,14 +340,17 @@ Evaluate the system `F` and its Jacobian at `x` with parameters `p`.
 
 @generated function _differentiate_parameters!(U, F::PolynomialSystem{N, NVars, NParams}, x, p) where {N, NVars, NParams}
     quote
-        $(map(1:N) do i
-            quote
-                ∇ = _differentiate_parameters(F.polys[$i], x, p)
-                for j=1:$NParams
-                    U[$i, j] = ∇[j]
+        @boundscheck checkbounds(U, 1:$N, 1:$NParams)
+        @inbounds begin
+            $(map(1:N) do i
+                quote
+                    ∇ = _differentiate_parameters(F.polys[$i], x, p)
+                    for j=1:$NParams
+                        U[$i, j] = ∇[j]
+                    end
                 end
-            end
-        end...)
+            end...)
+        end
         U
     end
 end
