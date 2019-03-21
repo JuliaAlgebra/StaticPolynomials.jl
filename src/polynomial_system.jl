@@ -224,15 +224,6 @@ and store its result in `U`.
 Evaluate the Jacobian of the polynomial system `F` at `x` with parameters `p`
 and store its result in `U`.
 """ jacobian!(U, F::PolynomialSystem, x, p)
-
-@generated function assemble_matrix(vs::SVector{M, SVector{N, T}}) where {T, N, M}
-    quote
-        SMatrix{$M, $N, $T, $(M*N)}(
-            tuple($([:(vs[$i][$j]) for j=1:N for i=1:M]...))
-        )
-    end
-end
-
 @generated function _jacobian(F::PolynomialSystem{N}, x...) where {N}
     ∇ = [Symbol("∇", i) for i=1:N]
     quote

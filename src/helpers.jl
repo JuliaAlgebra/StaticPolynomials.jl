@@ -71,3 +71,11 @@ function revlexicographic_cols_perm(A::AbstractMatrix; kws...)
     cols = map(i -> (@view A[end:-1:1, i]), inds)
     sortperm(cols; kws...)
 end
+
+@generated function assemble_matrix(vs::SVector{M, SVector{N, T}}) where {T, N, M}
+    quote
+        SMatrix{$M, $N, $T, $(M*N)}(
+            tuple($([:(vs[$i][$j]) for j=1:N for i=1:M]...))
+        )
+    end
+end
