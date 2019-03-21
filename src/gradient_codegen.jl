@@ -5,32 +5,31 @@ Generate the statements for the evaluation of the polynomial with exponents `E`
 and paramter exponents `P`.
 This assumes that `E` and `P` are in reverse lexicographic order.
 """
-function generate_gradient(E, P, ::Type{T}, access_input) where T
+function generate_gradient(E, P, ::Type{T}, access_input,coeffs=map(i -> :(c[$i]), 1:size(E, 2))) where T
     nvars = size(E,1)
     if P !== nothing
         nvars += size(P, 1)
     end
-    coeffperm = 1:size(E, 2)
 
     exprs = []
     # dvals is a list of tuples (s, iszero) where s is a symbol or expression
     # representing the partial derivative and iszero a boolean flag
     # indicating whether s is zero.
-    val, dvals = partial_derivatives!(exprs, E, P, T, nvars, 1, coeffperm, access_input)
+    val, dvals = partial_derivatives!(exprs, E, P, T, nvars, 1, coeffs, access_input)
     out = :($(val), SVector($(Expr(:tuple, map(first, dvals)...))))
 
     Expr(:block, exprs..., out)
 end
 
-function partial_derivatives!(exprs, E, P, ::Type{T}, nvar, nterm, coeffperm, access_input) where T
+function partial_derivatives!(exprs, E, P, ::Type{T}, nvar, nterm, coeffs, access_input) where T
     m, n = size(E)
 
     # We only have one Term remaining. So we just evaluate the term and compute all
     # partial derivatives
     if n == 1
-        return term(E, P, T, nterm, coeffperm, access_input)
+        return term(E, P, T, nterm, coeffs, access_input)
     elseif m == 1
-        return univariate!(exprs, E, P, T, nvar, nterm, coeffperm, access_input)
+        return univariate!(exprs, E, P, T, nvar, nterm, coeffs, access_input)
     end
 
     degrees, submatrices = degrees_submatrices(E)
@@ -38,7 +37,7 @@ function partial_derivatives!(exprs, E, P, ::Type{T}, nvar, nterm, coeffperm, ac
     dvalues = []
 
     for (k, E_d) in enumerate(submatrices)
-        val, dvals = partial_derivatives!(exprs, E_d, P, T, nvar - 1, nterm, coeffperm, access_input)
+        val, dvals = partial_derivatives!(exprs, E_d, P, T, nvar - 1, nterm, coeffs, access_input)
         push!(values, val)
         push!(dvalues, dvals)
 
@@ -77,9 +76,9 @@ function partial_derivatives!(exprs, E, P, ::Type{T}, nvar, nterm, coeffperm, ac
     val, dvals
 end
 
-function term(E::AbstractMatrix, P, ::Type{T}, nterm, coeffperm, access_input) where T
+function term(E::AbstractMatrix, P, ::Type{T}, nterm, coeffs, access_input) where T
     @assert size(E, 2) == 1
-    c = term_coefficient_with_parameters(T, P, nterm, coeffperm, access_input)
+    c = term_coefficient_with_parameters(T, P, nterm, coeffs, access_input)
     offset = P === nothing ? 0 : size(P, 1)
     monomial_product_with_derivatives(T, E, c, access_input=i -> access_input(i+offset))
 end
@@ -89,24 +88,24 @@ end
 
 Compute the coefficient of the `nterm`-th term with possible parameters.
 """
-function term_coefficient_with_parameters(T, P, nterm, coeffperm, access_input)
-    monomial_product(T, P[:,nterm], :(c[$(coeffperm[nterm])]), access_input=access_input)[1]
+function term_coefficient_with_parameters(T, P, nterm, coeffs, access_input)
+    monomial_product(T, P[:,nterm], coeffs[nterm], access_input=access_input)[1]
 end
-term_coefficient_with_parameters(T, ::Nothing, nterm, coeffperm, access_input) = :(c[$(coeffperm[nterm])])
+term_coefficient_with_parameters(T, ::Nothing, nterm, coeffs, access_input) = coeffs[nterm]
 
 """
     univariate!(exprs, E::AbstractMatrix, P, ::Type{T}, nvar, nterm, access_input)
 
 `E` represents an univariate polynomial.
 """
-function univariate!(exprs, E::AbstractMatrix, P, ::Type{T}, nvar, nterm, coeffperm, access_input) where T
+function univariate!(exprs, E::AbstractMatrix, P, ::Type{T}, nvar, nterm, coeffs, access_input) where T
     @assert size(E, 1) == 1
     n = size(E, 2)
     # If we have parameters it can happen that there are duplicates E
     # For each group of duplicates we have to evaluate the coefficient polynomial
-    coeffs, E_filtered = coefficients_with_parameters!(exprs, E, P, T, nterm, coeffperm, access_input)
+    rec_coeffs, E_filtered = coefficients_with_parameters!(exprs, E, P, T, nterm, coeffs, access_input)
 
-    val, dval = evalpoly_derivative!(exprs, T, E_filtered, coeffs, access_input(nvar))
+    val, dval = evalpoly_derivative!(exprs, T, E_filtered, rec_coeffs, access_input(nvar))
     val, [(dval, n == 1)]
 end
 
@@ -117,13 +116,13 @@ If we have parameters it can happen that there are duplicates in E.
 For each group of duplicates we have to evaluate the coefficient polynomial.
 If there are no parameters this is simply the coefficients vector.
 """
-function coefficients_with_parameters!(exprs, E, ::Nothing, ::Type{T}, nterm, coeffperm, access_input) where T
+function coefficients_with_parameters!(exprs, E, ::Nothing, ::Type{T}, nterm, coeffs, access_input) where T
     n = size(E, 2)
-    [:(c[$(coeffperm[j])]) for j=nterm:nterm+n-1], vec(E)
+    coeffs[nterm:nterm+n-1], vec(E)
 end
-function coefficients_with_parameters!(exprs, E, P, ::Type{T}, nterm, coeffperm, access_input) where T
+function coefficients_with_parameters!(exprs, E, P, ::Type{T}, nterm, coeffs, access_input) where T
     n = size(E, 2)
-    coeffs = []
+    pcoeffs = []
     last = 1
     j = 1
     E_filtered = [E[1,1]]
@@ -141,18 +140,18 @@ function coefficients_with_parameters!(exprs, E, P, ::Type{T}, nterm, coeffperm,
 
         nduplicates = j - last - 1
         if nduplicates == 0 # nothing happened
-            c, _ = monomial_product(T, P[:,nterm_sub], :(c[$(coeffperm[nterm_sub])]), access_input=access_input)
-            push!(coeffs, c)
+            c, _ = monomial_product(T, P[:,nterm_sub], coeffs[nterm_sub], access_input=access_input)
+            push!(pcoeffs, c)
         else
             # we have duplicates, so we consider the rest (the parameters) as an polynomial
             # and pass it to evaluate
             P_sub = @view P[:,nterm_sub:nterm+j-2]
-            c = generate_evaluate!(exprs, P_sub, T, size(P, 1), nterm_sub, coeffperm, access_input)
-            push!(coeffs, c)
+            c = generate_evaluate!(exprs, P_sub, T, size(P, 1), nterm_sub, coeffs, access_input)
+            push!(pcoeffs, c)
         end
         last = j
     end
-    coeffs, E_filtered
+    pcoeffs, E_filtered
 end
 
 function generate_differentiate_parameters(E, P, ::Type{T}, access_input) where T
@@ -164,7 +163,7 @@ function generate_differentiate_parameters(E, P, ::Type{T}, access_input) where 
     p = revlexicographic_cols_perm([E; P])
     E = E[:, p]
     P = P[:, p]
-    coeffperm = p
+    coeffs = map(i -> :(c[$i]), p)
     # Since we are only interested in the derivative we can by hand eliminate all
     # terms where no parameter occurs (these are constant terms in our new setting)
     # Since we have a revlexicographic order of the columns, the all 0 column
@@ -190,7 +189,7 @@ function generate_differentiate_parameters(E, P, ::Type{T}, access_input) where 
         end
         E = E[:,nconstants+1:end]
         P = P[:,nconstants+1:end]
-        coeffperm = coeffperm[nconstants+1:end]
+        coeffs = coeffs[nconstants+1:end]
     end
     # we can derivate wrt the parameters by changing the roles
     E, P = P, E
@@ -199,7 +198,7 @@ function generate_differentiate_parameters(E, P, ::Type{T}, access_input) where 
     # dvals is a list of tuples (s, iszero) where s is a symbol or expression
     # representing the partial derivative and iszero a boolean flag
     # indicating whether s is zero.
-    _, dvals = partial_derivatives!(exprs, E, P, T, nvars, 1, coeffperm, access_input)
+    _, dvals = partial_derivatives!(exprs, E, P, T, nvars, 1, coeffs, access_input)
     quote
         $(exprs...)
         SVector($(Expr(:tuple, map(first, dvals)...)))
