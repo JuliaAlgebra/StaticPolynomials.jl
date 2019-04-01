@@ -235,9 +235,14 @@ function _gradient_hessian_impl(f::Type{Polynomial{T, E, P}}; return_grad=true) 
 
             mᵢ += 1
         end
-        Eᵢ = reshape(expsᵢ, (n, mᵢ))
-        Pᵢ = P === nothing ? nothing : reshape(paramsᵢ, (size(paramsᵢ, 1), mᵢ))
-        val_grad_codeᵢ = generate_gradient(Eᵢ, Pᵢ, T, access_input, coeffsᵢ)
+        if mᵢ == 0
+            zero_tuple = Expr(:tuple, (:(zero($T)) for _=1:n)...)
+            val_grad_codeᵢ = :((zero($T), SVector($zero_tuple)))
+        else
+            Eᵢ = reshape(expsᵢ, (n, mᵢ))
+            Pᵢ = P === nothing ? nothing : reshape(paramsᵢ, (size(paramsᵢ, 1), mᵢ))
+            val_grad_codeᵢ = generate_gradient(Eᵢ, Pᵢ, T, access_input, coeffsᵢ)
+        end
 
         push!(code, :($(Expr(:tuple, vals[i], ∇[i])) = begin $(val_grad_codeᵢ) end))
     end
