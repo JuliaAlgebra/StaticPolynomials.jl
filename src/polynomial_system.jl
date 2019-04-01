@@ -1,6 +1,7 @@
 export PolynomialSystem, npolynomials,
     evaluate!,
     jacobian!, jacobian, evaluate_and_jacobian!, evaluate_and_jacobian,
+    jacobian_and_hessian!,
     differentiate_parameters, differentiate_parameters!
 
 import Base: @propagate_inbounds
@@ -259,7 +260,7 @@ Evaluate the Jacobian of the polynomial system `F` at `x` with parameters `p`.
     quote
         @boundscheck checkbounds(u, 1:$N)
         @boundscheck checkbounds(U, 1:$N, 1:$NVars)
-        
+
         @inbounds begin
             $(map(1:N) do i
                 quote
@@ -324,6 +325,65 @@ Evaluate the system `F` and its Jacobian at `x`.
     evaluate_and_jacobian!(F::PolynomialSystem, x, p)
 Evaluate the system `F` and its Jacobian at `x` with parameters `p`.
 """ evaluate_and_jacobian(F::PolynomialSystem, x, p)
+
+
+############
+# HESSIAN
+###########
+@generated function _hessian!(U::AbstractArray{T,3}, F::PolynomialSystem{N, NVars}, x...) where {T, N, NVars}
+    quote
+        @boundscheck checkbounds(U, 1:$N, 1:$NVars, 1:$NVars)
+        @inbounds begin
+            $(map(1:N) do i
+                quote
+                    H = hessian(F.polys[$i], x...)
+                    @inbounds for k=1:$NVars, j=1:$NVars
+                        U[$i, k, j] = H[k, j]
+                    end
+                end
+            end...)
+        end
+        U
+    end
+end
+
+"""
+     hessian!(U::AbstractArray{T,3}, F::PolynomialSystem, x, [p])
+
+Evaluate the Hessian of the polynomial system `F` at `x` and store its result in `U`.
+"""
+@propagate_inbounds hessian!(U, F::PolynomialSystem, x::AbstractVector) = _hessian!(U, F, x)
+@propagate_inbounds hessian!(U, F::PolynomialSystem, x::AbstractVector, p) = _hessian!(U, F, x, p)
+
+@generated function _jacobian_and_hessian!(u::AbstractMatrix, U::AbstractArray{T,3}, F::PolynomialSystem{N, NVars}, x...) where {T, N, NVars}
+    quote
+        @boundscheck checkbounds(U, 1:$N, 1:$NVars, 1:$NVars)
+        @boundscheck checkbounds(u, 1:$N, 1:$NVars)
+        @inbounds begin
+            $(map(1:N) do i
+                quote
+                    grad, H = gradient_and_hessian(F.polys[$i], x...)
+                    @inbounds for j=1:$NVars
+                        u[$i, j] = grad[j]
+                    end
+                    @inbounds for k=1:$NVars, j=1:$NVars
+                        U[$i, k, j] = H[k, j]
+                    end
+                end
+            end...)
+        end
+        nothing
+    end
+end
+"""
+     jacobian_and_hessian!(u, U::AbstractArray{T,3}, F::PolynomialSystem, x)
+
+Evaluate the Jacobian and Hessian of the polynomial system `F` at `x`
+and store its result in `u` and `U`.
+"""
+@propagate_inbounds jacobian_and_hessian!(u, U, F::PolynomialSystem, x::AbstractVector) = _jacobian_and_hessian!(u, U, F, x)
+@propagate_inbounds jacobian_and_hessian!(u, U, F::PolynomialSystem, x::AbstractVector, p) = _jacobian_and_hessian!(u, U, F, x, p)
+
 
 #####################
 # Parameter Jacobian

@@ -16,6 +16,10 @@ gradient
 gradient!
 evaluate_and_gradient
 evaluate_and_gradient!
+hessian(f::Polynomial, xp...)
+hessian!(U, f::Polynomial, xp...)
+gradient_and_hessian
+gradient_and_hessian!
 differentiate_parameters(::Polynomial, x, p)
 differentiate_parameters!(u, ::Polynomial, x, p)
 ```
@@ -38,6 +42,8 @@ jacobian
 jacobian!
 evaluate_and_jacobian
 evaluate_and_jacobian!
+hessian!(U, F::PolynomialSystem, x::AbstractVector)
+jacobian_and_hessian!
 differentiate_parameters(::PolynomialSystem, x, p)
 differentiate_parameters!(U, ::PolynomialSystem, x, p)
 ```
