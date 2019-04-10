@@ -175,6 +175,38 @@
         @test U == [4407 -14297; 1 3]
     end
 
+    @testset "Hessian" begin
+        @polyvar x y z
+
+        w = [2, 3, 5]
+
+        f = x^4*y+x*y*z+y+x+z
+        g = Polynomial(f)
+        grad_g = Polynomial.(MP.differentiate(f, [x, y, z]))
+        hess_w = vcat(map(grad_g) do g_i
+            gradient(g_i, w)'
+        end...)
+
+        @test hessian(g, w) == hess_w
+        @test gradient_and_hessian(g, w) == (gradient(g, w), hess_w)
+
+        U = zeros(Int, 3, 3)
+        @test hessian!(U, g, w) == hess_w
+
+
+        p = [x^4*y+x*y*z+y+x+z, (x^3+y^2)*z]
+        P = PolynomialSystem(p)
+
+        u = zeros(2, 3)
+        U = zeros(2, 3, 3)
+
+        hessian!(U, P, w)
+        @test U[1,:,:] == hess_w
+        jacobian_and_hessian!(u, U, P, w)
+        @test u[1,:] == gradient(g, w)
+        @test U[1,:,:] == hess_w
+    end
+
     @testset "foreach" begin
         @polyvar x y
         g = [Polynomial(x^2+y^2), Polynomial(2x^2+4y^2+3x*y^4+1)]

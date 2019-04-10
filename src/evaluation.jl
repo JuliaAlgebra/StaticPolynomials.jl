@@ -1,6 +1,7 @@
 export evaluate, gradient, gradient!,
     evaluate_and_gradient, evaluate_and_gradient!,
-    differentiate_parameters, differentiate_parameters!
+    differentiate_parameters, differentiate_parameters!,
+    hessian!, hessian, gradient_and_hessian, gradient_and_hessian!
 
 import Base: @propagate_inbounds
 
@@ -178,6 +179,133 @@ end
     val
 end
 
+
+
+#############
+## Hessian ##
+#############
+
+function _gradient_hessian_impl(f::Type{Polynomial{T, E, P}}; return_grad=true) where {T, E, P}
+    if P == Nothing
+        access_input = x_
+    else
+        n = size(P, 1)
+        access_input(i) = i ≤ n ? :(p[$i]) : :(x[$(i-n)])
+    end
+
+    exps = exponents(E)
+    params = exponents(P)
+
+    n, m = size(E)
+
+    code = []
+    ∇ = [Symbol("∇", i) for i=1:n]
+    vals = [Symbol("val", i) for i=1:n]
+
+
+    # for each variable we simulate the derivative
+    for i in 1:n
+        coeffsᵢ = Union{Symbol, Expr}[]
+        expsᵢ = Vector{eltype(exps)}()
+        paramsᵢ = P === nothing ? nothing : Vector{eltype(exps)}()
+        mᵢ = 0
+
+        # For each term make the symbolic derivative
+        for j in 1:m
+            if exps[i,j] == 0
+                continue
+            end
+            for k in 1:n
+                if i == k
+                    push!(expsᵢ, exps[k, j] - 1)
+                    if exps[i,j] > 1
+                        push!(coeffsᵢ, :($(exps[i,j]) * c[$j]))
+                    else
+                        push!(coeffsᵢ, :(c[$j]))
+                    end
+                else
+                    push!(expsᵢ, exps[k, j])
+                end
+            end
+            if params !== nothing
+                for k in 1:size(params, 1)
+                    push!(paramsᵢ, params[k, j])
+                end
+            end
+
+            mᵢ += 1
+        end
+        if mᵢ == 0
+            zero_tuple = Expr(:tuple, (:(zero($T)) for _=1:n)...)
+            val_grad_codeᵢ = :((zero($T), SVector($zero_tuple)))
+        else
+            Eᵢ = reshape(expsᵢ, (n, mᵢ))
+            Pᵢ = P === nothing ? nothing : reshape(paramsᵢ, (size(paramsᵢ, 1), mᵢ))
+            val_grad_codeᵢ = generate_gradient(Eᵢ, Pᵢ, T, access_input, coeffsᵢ)
+        end
+
+        push!(code, :($(Expr(:tuple, vals[i], ∇[i])) = begin $(val_grad_codeᵢ) end))
+    end
+
+
+    push!(code, :(grad = SVector($(Expr(:tuple, vals...)))))
+    push!(code, :(hess = assemble_matrix(SVector($(Expr(:tuple, (∇[i] for i=1:n)...))))))
+    quote
+        @boundscheck length(x) ≥ $(size(E)[1])
+        c = coefficients(f)
+        $(code...)
+        grad, hess
+    end
+end
+
+@generated function gradient_and_hessian(f::Polynomial{T,E,Nothing}, x::AbstractVector) where {T, E}
+    _gradient_hessian_impl(f)
+end
+@generated function gradient_and_hessian(f::Polynomial, x::AbstractVector, p)
+    _gradient_hessian_impl(f)
+end
+
+@doc """
+     gradient_and_hessian(F::PolynomialSystem, x, [p])
+
+Compute the gradient and Hessian of `f` at `x`.
+""" gradient_and_hessian(F::Polynomial, x)
+
+"""
+    gradient_and_hessian!(u, U, f::Polynomial, x, [p])
+
+Compute the gradient and Hessian of `f` at `x` and store them in `u` and `U`.
+"""
+function gradient_and_hessian!(u, U, f::Polynomial, xp...)
+    grad, hess = gradient_and_hessian(f, xp...)
+    u .= grad
+    U .= hess
+    nothing
+end
+
+"""
+    hessian(f::Polynomial, x, [p])
+
+Compute the hessian of `f` at `x`.
+"""
+function hessian(f::Polynomial, xp...)
+    last(gradient_and_hessian(f, xp...))
+end
+
+"""
+    hessian!(U, f::Polynomial, x, [p])
+
+Compute the hessian of `f` at `x` and store it in `U`.
+"""
+function hessian!(U, f::Polynomial, xp...)
+    U .= hessian(f, xp...)
+    U
+end
+
+
+################
+## Parameters ##
+################
 function _differentiate_parameters_impl(f::Type{Polynomial{T, E, P}}) where {T, E, P}
     @assert P != Nothing
 
