@@ -10,6 +10,7 @@ MultivariatePolynomials = "102ac46a-7ee4-5c85-9060-abc95bfdeaa3"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
+julia = "1"
 MultivariatePolynomials = "^0.2"
 StaticArrays = "^0.8, ^0.9, ^0.10"
 
