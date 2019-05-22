@@ -1,4 +1,5 @@
-export Polynomial, coefficients, exponents, nvariables, variables, parameters, nparameters, coefficienttype, scale_coefficients!
+export Polynomial, coefficients, exponents, nvariables, variables,
+    parameters, nparameters, coefficienttype, scale_coefficients!, permutation
 
 
 """
@@ -14,16 +15,17 @@ struct Polynomial{T, SE, Params}
     coefficients::Vector{T}
     variables::Vector{Symbol}
     parameters::Union{Nothing, Vector{Symbol}}
+    perm::Vector{Int}
 
-    function Polynomial{T, SE, P}(coefficients::Vector{T}, variables, parameters) where {T, SE, P}
+    function Polynomial{T, SE, P}(coefficients::Vector{T}, variables, parameters, perm::Vector{Int}) where {T, SE, P}
         # @assert length(coefficients) == size(SE, 2) "Coefficients size does not match exponents size"
-        new(coefficients, variables, parameters)
+        new(coefficients, variables, parameters, perm)
     end
 end
 
-function Polynomial(coeffs::Vector{T}, SE::SExponents, variables, PE::Union{Nothing,SExponents}, parameters) where {T}
+function Polynomial(coeffs::Vector{T}, SE::SExponents, variables, PE::Union{Nothing,SExponents}, parameters, perm::Vector{Int}) where {T}
     Params = PE isa Nothing ? Nothing : PE
-    Polynomial{T, SE, Params}(coeffs, variables, parameters)
+    Polynomial{T, SE, Params}(coeffs, variables, parameters, perm)
 end
 
 function Polynomial(p::MP.AbstractPolynomialLike; parameters=nothing, variables=diffvars(MP.variables(p), parameters))
@@ -58,8 +60,9 @@ end
 lengthparams(::Nothing) = 0
 lengthparams(params) = length(params)
 
-function Polynomial(coeffs::Vector, E::Matrix{<:Integer}, variables,
-                    PE::Union{Nothing, Matrix{<:Integer}}, parameters)
+function Polynomial(coeffs::Vector, E::Matrix{<:Integer}, variables::Vector{Symbol}=defaultvariables(size(E, 1)),
+                    PE::Union{Nothing, Matrix{<:Integer}}=nothing, parameters=nothing)
+    @assert length(coeffs) == size(E, 2) "Number of coefficients doesn't match number of terms."
     if PE === nothing
         p = revlexicographic_cols_perm(E)
         SPE = nothing
@@ -67,15 +70,10 @@ function Polynomial(coeffs::Vector, E::Matrix{<:Integer}, variables,
         p = revlexicographic_cols_perm([PE; E])
         SPE = SExponents(PE[:, p])
     end
-    return Polynomial(coeffs[p], SExponents(E[:,p]), variables, SPE, parameters)
+    return Polynomial(coeffs[p], SExponents(E[:,p]), variables, SPE, parameters, p)
 end
 
-function Polynomial(coeffs::Vector, exponents::Matrix{<:Integer}, variables=defaultvariables(size(exponents, 1)))
-    @assert length(coeffs) == size(exponents, 2) "Number of coefficients doesn't match number of terms."
-    Polynomial(coeffs, exponents, variables, nothing, nothing)
-end
-
-defaultvariables(n) = SVector((Symbol("x", i) for i=1:n)...)
+defaultvariables(n) = [Symbol("x", i) for i=1:n]
 
 """
     coefficients(f)
@@ -137,6 +135,13 @@ nparameters(f::Polynomial) = f.parameters === nothing ? 0 : length(f.parameters)
 Return the type of the coefficients of `f`.
 """
 coefficienttype(::Polynomial{T}) where {T} = T
+
+"""
+    permutation(f::Polynomial)
+
+Return the permutation applied to the support of the polynomial system.
+"""
+permutation(f::Polynomial) = f.perm
 
 
 function Base.:(==)(f::Polynomial{T, E1, P1}, g::Polynomial{T, E2, P2}) where {T, E1, E2, P1, P2}
