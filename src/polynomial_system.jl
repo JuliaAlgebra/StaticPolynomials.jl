@@ -198,9 +198,9 @@ Evaluate the polynomial system `F` at `x` with parameters `p` and store its resu
         @inbounds begin
             $(map(1:N) do i
                 quote
-                    ∇ = _gradient(F.polys[$i], x...)
+                    $(Symbol("∇", i)) = _gradient(F.polys[$i], x...)
                     for j=1:$NVars
-                        U[$i, j] = ∇[j]
+                        U[$i, j] = $(Symbol("∇", i))[j]
                     end
                 end
             end...)
@@ -264,10 +264,10 @@ Evaluate the Jacobian of the polynomial system `F` at `x` with parameters `p`.
         @inbounds begin
             $(map(1:N) do i
                 quote
-                    val, ∇ = _val_gradient(F.polys[$i], x...)
-                    u[$i] = val
+                    $(Symbol("val", i)), $(Symbol("∇", i)) = _val_gradient(F.polys[$i], x...)
+                    u[$i] = $(Symbol("val", i))
                     for j=1:$NVars
-                        U[$i, j] = ∇[j]
+                        U[$i, j] = $(Symbol("∇", i))[j]
                     end
                 end
             end...)
@@ -336,9 +336,9 @@ Evaluate the system `F` and its Jacobian at `x` with parameters `p`.
         @inbounds begin
             $(map(1:N) do i
                 quote
-                    H = hessian(F.polys[$i], x...)
+                    $(Symbol("H", i)) = hessian(F.polys[$i], x...)
                     @inbounds for k=1:$NVars, j=1:$NVars
-                        U[$i, k, j] = H[k, j]
+                        U[$i, k, j] = $(Symbol("H", i))[k, j]
                     end
                 end
             end...)
@@ -362,12 +362,12 @@ Evaluate the Hessian of the polynomial system `F` at `x` and store its result in
         @inbounds begin
             $(map(1:N) do i
                 quote
-                    grad, H = gradient_and_hessian(F.polys[$i], x...)
+                    $(Symbol("grad", i)), $(Symbol("H", i)) = gradient_and_hessian(F.polys[$i], x...)
                     @inbounds for j=1:$NVars
-                        u[$i, j] = grad[j]
+                        u[$i, j] = $(Symbol("grad", i))[j]
                     end
                     @inbounds for k=1:$NVars, j=1:$NVars
-                        U[$i, k, j] = H[k, j]
+                        U[$i, k, j] = $(Symbol("H", i))[k, j]
                     end
                 end
             end...)
@@ -395,9 +395,9 @@ and store its result in `u` and `U`.
         @inbounds begin
             $(map(1:N) do i
                 quote
-                    ∇ = _differentiate_parameters(F.polys[$i], x, p)
+                    $(Symbol("∇", i)) = _differentiate_parameters(F.polys[$i], x, p)
                     for j=1:$NParams
-                        U[$i, j] = ∇[j]
+                        U[$i, j] = $(Symbol("∇", i))[j]
                     end
                 end
             end...)
