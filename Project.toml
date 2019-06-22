@@ -12,7 +12,7 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 [compat]
 julia = "1"
 MultivariatePolynomials = "^0.2"
-StaticArrays = "^0.8, ^0.9, ^0.10"
+StaticArrays = "^0.8, ^0.9, ^0.10, ^0.11"
 
 [extras]
 DynamicPolynomials = "7c1d4256-1411-5781-91ec-d7bc3513ac07"
