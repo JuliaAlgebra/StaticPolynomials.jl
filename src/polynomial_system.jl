@@ -128,7 +128,7 @@ function Base.show(io::IO, p::PolynomialSystem{N, NVars, NParams}) where {N, NVa
     foreach(pi -> println(io, "\n", " ", pi), p)
 end
 
-function Base.print(io::IO, p::PolynomialSystem{N, NVars}) where {N, NVars, NParams}
+function Base.print(io::IO, p::PolynomialSystem{N, NVars, NParams}) where {N, NVars, NParams}
     print(io, "PolynomialSystem{$N, $NVars, $NParams}(")
     foreach(pi -> print(io, pi, ", "), p)
     print(")")
