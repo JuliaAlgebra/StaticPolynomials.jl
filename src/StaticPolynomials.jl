@@ -2,13 +2,9 @@ __precompile__()
 
 module StaticPolynomials
 
-    import MultivariatePolynomials
-    const MP = MultivariatePolynomials
+    import MultivariatePolynomials as MP
     import StaticArrays: SVector, MVector, SMatrix
     import LinearAlgebra
-    if VERSION < v"1.0-"
-        import LinearAlgebra: gradient
-    end
 
     include("helpers.jl")
     include("sexponents.jl")
