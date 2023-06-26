@@ -12,7 +12,7 @@
         @test exponents(f2) == [0 2 1 0; 0 0 1 2]
         @test nvariables(f2) == 2
         @test coefficients(f2) == [1, 2, 3, 4]
-        @test coefficienttype(f2) == Int64
+        @test coefficienttype(f2) == Int
         @test permutation(f2) == [1, 4, 3, 2]
         f2_2 = Polynomial(2x^2+4y^2+3x*y+1)
         @test f2 == f2_2
